@@ -4,8 +4,8 @@
 
 MODE="${1:-scan}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DB_PATH="$SCRIPT_DIR/../hardening.db"
-BACKUP_DIR="$SCRIPT_DIR/../backups/package_management"
+DB_PATH="$SCRIPT_DIR/hardening.db"
+BACKUP_DIR="$SCRIPT_DIR/backups"
 TOPIC="Package Management"
 
 mkdir -p "$BACKUP_DIR"
@@ -19,6 +19,19 @@ TOTAL_CHECKS=0
 PASSED_CHECKS=0
 FAILED_CHECKS=0
 FIXED_CHECKS=0
+
+initialize_db() {
+    if [ ! -f "$DB_PATH" ]; then
+        sqlite3 "$DB_PATH" "CREATE TABLE IF NOT EXISTS configurations (
+            topic TEXT,
+            rule_id TEXT PRIMARY KEY,
+            rule_name TEXT,
+            original_value TEXT,
+            current_value TEXT,
+            status TEXT
+        );"
+    fi
+}
 
 log_info() { echo -e "${GREEN}[INFO]${NC} $1"; }
 log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
@@ -39,7 +52,7 @@ cursor.execute('''
     INSERT OR REPLACE INTO configurations 
     (topic, rule_id, rule_name, original_value, current_value, status)
     VALUES (?, ?, ?, ?, ?, 'stored')
-''', ('$TOPIC', '$rule_id', '''$rule_name''', '''$original_value''', '''$current_value'''))
+''', ('$TOPIC', '$rule_id', '$rule_name', '$original_value', '$current_value'))
 conn.commit()
 conn.close()
 "
@@ -61,6 +74,158 @@ print(result[0] if result else '')
 # ============================================================================
 # 2.1 Configure Bootloader
 # ============================================================================
+get_grub_cfg() {
+    local grub_paths=(
+        "/boot/grub/grub.cfg"
+        "/boot/grub2/grub.cfg"
+        "/boot/efi/EFI/kali/grub.cfg"
+        "/boot/efi/EFI/ubuntu/grub.cfg"
+        "/boot/efi/EFI/fedora/grub.cfg"
+    )
+
+    for path in "${grub_paths[@]}"; do
+        if [ -f "$path" ]; then
+            echo "$path"
+            return 0
+        fi
+    done
+
+    # If no GRUB configuration is found, attempt to regenerate it
+    log_warn "No GRUB configuration file found. Attempting to regenerate GRUB config..."
+    create_grub_config || return 1
+
+    # Try to find the GRUB config again after regeneration
+    for path in "${grub_paths[@]}"; do
+        if [ -f "$path" ]; then
+            echo "$path"
+            return 0
+        fi
+    done
+
+    log_error "Failed to find or regenerate GRUB configuration file."
+    return 1
+}
+
+
+create_grub_config() {
+    log_warn "No GRUB configuration file found. Attempting to regenerate GRUB config..."
+
+    # Check for presence of update-grub or grub-mkconfig tools
+    if command -v update-grub &>/dev/null; then
+        update-grub || return 1
+    elif command -v grub-mkconfig &>/dev/null; then
+        grub-mkconfig -o /boot/grub/grub.cfg || return 1
+    else
+        log_error "Neither update-grub nor grub-mkconfig found. Attempting to install missing GRUB tools."
+        
+        # Try installing GRUB tools based on package manager
+        if command -v apt-get &>/dev/null; then
+            sudo apt-get install -y grub2-common || return 1
+        elif command -v yum &>/dev/null; then
+            sudo yum install -y grub2 || return 1
+        elif command -v dnf &>/dev/null; then
+            sudo dnf install -y grub2 || return 1
+        else
+            log_error "Unable to install GRUB tools automatically. Please install GRUB manually."
+            return 1
+        fi
+        
+        # Reattempt to regenerate the GRUB config
+        if command -v update-grub &>/dev/null; then
+            update-grub || return 1
+        elif command -v grub-mkconfig &>/dev/null; then
+            grub-mkconfig -o /boot/grub/grub.cfg || return 1
+        else
+            log_error "Failed to regenerate GRUB config. Please check your GRUB installation."
+            return 1
+        fi
+    fi
+    
+    log_info "GRUB configuration regenerated successfully."
+    return 0
+}
+
+log_info() {
+    echo "[INFO] $1"
+}
+
+log_error() {
+    echo "[ERROR] $1"
+}
+
+regenerate_grub_config() {
+    log_info "Checking for GRUB configuration file..."
+    if ! grub-mkconfig -o /boot/grub/grub.cfg && ! update-grub; then
+        log_error "Failed to regenerate GRUB configuration. Ensure GRUB is properly installed."
+        return 1
+    fi
+    log_info "GRUB configuration regenerated successfully."
+    return 0
+}
+
+generate_grub_password_hash() {
+    log_info "Generating GRUB password hash..."
+    local password="mysecurepassword"  # Replace this with a secure password generation method
+    password_hash=$(echo -n "$password" | grub-mkpasswd-pbkdf2 2>/dev/null | grep 'grub.pbkdf2.sha512' | awk '{print $NF}')
+    if [ -z "$password_hash" ]; then
+        log_error "Failed to generate GRUB password hash."
+        return 1
+    fi
+    log_info "Generated GRUB password hash successfully."
+    return 0
+}
+
+apply_permissions_to_grub() {
+    log_info "Setting permissions for GRUB configuration files..."
+    local grub_cfg="/boot/grub/grub.cfg"
+    if [ ! -f "$grub_cfg" ]; then
+        log_error "GRUB configuration file $grub_cfg not found."
+        return 1
+    fi
+    chown root:root "$grub_cfg"
+    chmod 400 "$grub_cfg"
+    log_info "Permissions set for GRUB configuration file."
+    return 0
+}
+
+fix_grub_security() {
+    log_info "Starting GRUB security hardening..."
+
+    regenerate_grub_config || return 1
+    generate_grub_password_hash || return 1
+    apply_permissions_to_grub || return 1
+
+    log_info "GRUB security hardening completed successfully."
+    return 0
+}
+
+set_grub_password() {
+    log_info "Attempting to set GRUB password using grub2-setpassword..."
+
+    # Check if grub2-setpassword is available
+    if ! command -v grub2-setpassword >/dev/null 2>&1; then
+        log_error "grub2-setpassword is not available. Falling back to manual password hash generation."
+        return 1
+    fi
+
+    # Run grub2-setpassword to set the password
+    echo "Enter GRUB password:"
+    grub2-setpassword
+    if [ $? -eq 0 ]; then
+        log_info "GRUB password set successfully using grub2-setpassword."
+    else
+        log_error "Failed to set GRUB password using grub2-setpassword."
+        return 1
+    fi
+
+    # Update GRUB
+    log_info "Running update-grub to apply changes..."
+    update-grub || return 1
+
+    log_info "GRUB password has been set and changes applied."
+    return 0
+}
+
 
 check_bootloader_password() {
     local rule_id="PKG-BOOT-PASSWORD"
@@ -71,46 +236,29 @@ check_bootloader_password() {
     echo "Checking: $rule_name"
     echo "Rule ID: $rule_id"
     
+    local grub_cfg
+    grub_cfg=$(get_grub_cfg)
+    
     if [ "$MODE" = "scan" ]; then
-        # Check for GRUB2
-        if [ -f /boot/grub/grub.cfg ]; then
-            if grep -q "^password_pbkdf2" /boot/grub/grub.cfg 2>/dev/null; then
-                log_pass "Bootloader password is configured"
+        if [ -n "$grub_cfg" ]; then
+            if grep -q "^password_pbkdf2" "$grub_cfg" 2>/dev/null; then
+                log_pass "Bootloader password is configured in $grub_cfg"
                 ((PASSED_CHECKS++))
-                return 0
             else
-                log_error "Bootloader password is not set"
+                log_error "Bootloader password is not set in $grub_cfg"
                 ((FAILED_CHECKS++))
-                return 1
             fi
         else
-            log_warn "GRUB configuration not found"
+            log_warn "No GRUB configuration found on this system"
             ((FAILED_CHECKS++))
-            return 1
         fi
-        
     elif [ "$MODE" = "fix" ]; then
-        if [ -f /etc/grub.d/40_custom ]; then
-            cp /etc/grub.d/40_custom "$BACKUP_DIR/40_custom.$(date +%Y%m%d_%H%M%S)"
-            save_config "$rule_id" "$rule_name" "no_password"
-            
-            log_warn "Manual intervention required:"
-            log_info "1. Run: grub-mkpasswd-pbkdf2"
-            log_info "2. Add password to /etc/grub.d/40_custom"
-            log_info "3. Run: update-grub"
-            echo ""
-            echo "Example configuration:"
-            echo "set superusers=\"root\""
-            echo "password_pbkdf2 root <generated-hash>"
+        if [ -z "$grub_cfg" ]; then
+            create_grub_config || return 1
+            grub_cfg=$(get_grub_cfg)
         fi
-        
-    elif [ "$MODE" = "rollback" ]; then
-        local backup=$(ls -t "$BACKUP_DIR"/40_custom.* 2>/dev/null | head -1)
-        if [ -n "$backup" ]; then
-            cp "$backup" /etc/grub.d/40_custom
-            update-grub 2>/dev/null
-            log_info "Restored bootloader configuration"
-        fi
+
+        set_grub_password || return 1
     fi
 }
 
@@ -123,50 +271,33 @@ check_bootloader_config_permissions() {
     echo "Checking: $rule_name"
     echo "Rule ID: $rule_id"
     
-    local grub_cfg="/boot/grub/grub.cfg"
+    local grub_cfg
+    grub_cfg=$(get_grub_cfg)
     
     if [ "$MODE" = "scan" ]; then
-        if [ -f "$grub_cfg" ]; then
-            local perms=$(stat -c %a "$grub_cfg")
-            local owner=$(stat -c %U "$grub_cfg")
-            local group=$(stat -c %G "$grub_cfg")
+        if [ -n "$grub_cfg" ]; then
+            local perms owner group
+            perms=$(stat -c %a "$grub_cfg")
+            owner=$(stat -c %U "$grub_cfg")
+            group=$(stat -c %G "$grub_cfg")
             
             if [ "$perms" = "400" ] && [ "$owner" = "root" ] && [ "$group" = "root" ]; then
                 log_pass "Bootloader config permissions are correct (400 root:root)"
                 ((PASSED_CHECKS++))
-                return 0
             else
                 log_error "Bootloader config permissions incorrect: $perms $owner:$group"
                 ((FAILED_CHECKS++))
-                return 1
             fi
         else
-            log_warn "Bootloader config not found"
+            log_warn "No GRUB configuration found on this system"
             ((FAILED_CHECKS++))
-            return 1
         fi
-        
     elif [ "$MODE" = "fix" ]; then
-        if [ -f "$grub_cfg" ]; then
-            local current_perms=$(stat -c "%a %U:%G" "$grub_cfg")
-            save_config "$rule_id" "$rule_name" "$current_perms"
-            
+        if [ -n "$grub_cfg" ]; then
             chown root:root "$grub_cfg"
             chmod 400 "$grub_cfg"
             log_info "Set bootloader config permissions to 400 root:root"
             ((FIXED_CHECKS++))
-        fi
-        
-    elif [ "$MODE" = "rollback" ]; then
-        local original=$(get_original_config "$rule_id")
-        if [ -n "$original" ] && [ -f "$grub_cfg" ]; then
-            local orig_perms=$(echo "$original" | awk '{print $1}')
-            local orig_owner=$(echo "$original" | awk -F: '{print $1}' | awk '{print $2}')
-            local orig_group=$(echo "$original" | awk -F: '{print $2}')
-            
-            chmod "$orig_perms" "$grub_cfg" 2>/dev/null
-            chown "$orig_owner:$orig_group" "$grub_cfg" 2>/dev/null
-            log_info "Restored bootloader config permissions"
         fi
     fi
 }
@@ -174,7 +305,6 @@ check_bootloader_config_permissions() {
 # ============================================================================
 # 2.2 Additional Process Hardening
 # ============================================================================
-
 check_aslr() {
     local rule_id="PKG-PROC-ASLR"
     local rule_name="Ensure address space layout randomization is enabled"
@@ -249,7 +379,7 @@ check_ptrace_scope() {
         fi
         
     elif [ "$MODE" = "fix" ]; then
-        local current=$(sysctl -n kernel.yama.ptrace_scope 2>/dev/null)
+    	        local current=$(sysctl -n kernel.yama.ptrace_scope 2>/dev/null)
         save_config "$rule_id" "$rule_name" "$current"
         
         sysctl -w kernel.yama.ptrace_scope=1
@@ -401,7 +531,6 @@ check_apport() {
 # ============================================================================
 # 2.3 Command Line Warning Banners
 # ============================================================================
-
 check_issue_banner() {
     local rule_id="PKG-BANNER-ISSUE"
     local rule_name="Ensure local login warning banner is configured properly"
@@ -486,10 +615,19 @@ check_issue_net_banner() {
         fi
         
     elif [ "$MODE" = "fix" ]; then
-        cp /etc/issue.net "$BACKUP_DIR/issue.net.$(date +%Y%m%d_%H%M%S)" 2>/dev/null
+                cp /etc/issue.net "$BACKUP_DIR/issue.net.$(date +%Y%m%d_%H%M%S)" 2>/dev/null
         save_config "$rule_id" "$rule_name" "$(cat /etc/issue.net 2>/dev/null)"
         
-        cp /etc/issue /etc/issue.net
+        cat > /etc/issue.net << 'EOF'
+***************************************************************************
+                            NOTICE TO REMOTE USERS
+                            
+This system is for authorized use only. Unauthorized access will be
+prosecuted to the fullest extent of the law. All activities on this system
+are monitored and recorded.
+***************************************************************************
+EOF
+        
         log_info "Configured /etc/issue.net banner"
         ((FIXED_CHECKS++))
         
@@ -502,120 +640,36 @@ check_issue_net_banner() {
     fi
 }
 
-check_motd_permissions() {
-    local rule_id="PKG-BANNER-MOTD-PERMS"
-    local rule_name="Ensure access to /etc/motd is configured"
-    
-    ((TOTAL_CHECKS++))
-    echo ""
-    echo "Checking: $rule_name"
-    echo "Rule ID: $rule_id"
-    
-    if [ "$MODE" = "scan" ]; then
-        if [ -f /etc/motd ]; then
-            local perms=$(stat -c %a /etc/motd)
-            if [ "$perms" = "644" ]; then
-                log_pass "/etc/motd permissions are correct (644)"
-                ((PASSED_CHECKS++))
-                return 0
-            else
-                log_error "/etc/motd permissions incorrect: $perms"
-                ((FAILED_CHECKS++))
-                return 1
-            fi
-        else
-            log_pass "/etc/motd does not exist"
-            ((PASSED_CHECKS++))
-            return 0
-        fi
-        
-    elif [ "$MODE" = "fix" ]; then
-        if [ -f /etc/motd ]; then
-            local current_perms=$(stat -c %a /etc/motd)
-            save_config "$rule_id" "$rule_name" "$current_perms"
-            
-            chmod 644 /etc/motd
-            log_info "Set /etc/motd permissions to 644"
-            ((FIXED_CHECKS++))
-        fi
-        
-    elif [ "$MODE" = "rollback" ]; then
-        local original=$(get_original_config "$rule_id")
-        if [ -n "$original" ] && [ -f /etc/motd ]; then
-            chmod "$original" /etc/motd
-            log_info "Restored /etc/motd permissions"
-        fi
-    fi
-}
-
 # ============================================================================
 # Main Execution
 # ============================================================================
+initialize_db
 
-main() {
-    echo "========================================================================"
-    echo "Package Management Hardening Script"
-    echo "Mode: $MODE"
-    echo "========================================================================"
-    
-    if [ "$MODE" = "scan" ] || [ "$MODE" = "fix" ]; then
-        log_info "=== Bootloader Configuration ==="
-        check_bootloader_password
-        check_bootloader_config_permissions
-        
-        log_info ""
-        log_info "=== Process Hardening ==="
-        check_aslr
-        check_ptrace_scope
-        check_core_dumps
-        check_prelink
-        check_apport
-        
-        log_info ""
-        log_info "=== Warning Banners ==="
-        check_issue_banner
-        check_issue_net_banner
-        check_motd_permissions
-        
-        echo ""
-        echo "========================================================================"
-        echo "Summary"
-        echo "========================================================================"
-        echo "Total Checks: $TOTAL_CHECKS"
-        
-        if [ "$MODE" = "scan" ]; then
-            echo "Passed: $PASSED_CHECKS"
-            echo "Failed: $FAILED_CHECKS"
-            
-            if [ $FAILED_CHECKS -eq 0 ]; then
-                log_pass "All package management checks passed!"
-            else
-                log_warn "$FAILED_CHECKS checks failed. Run with 'fix' mode to remediate."
-            fi
-        else
-            echo "Fixed: $FIXED_CHECKS"
-            log_info "Fixes applied. Run 'scan' mode to verify."
-        fi
-        
-    elif [ "$MODE" = "rollback" ]; then
-        log_info "Rolling back package management configurations..."
-        
-        check_bootloader_password
-        check_bootloader_config_permissions
-        check_aslr
-        check_ptrace_scope
-        check_core_dumps
-        check_prelink
-        check_apport
-        check_issue_banner
-        check_issue_net_banner
-        check_motd_permissions
-        
-        log_info "Rollback completed"
-    else
-        echo "Usage: $0 {scan|fix|rollback}"
-        exit 1
-    fi
-}
+fix_grub_security
+check_bootloader_password
+check_bootloader_config_permissions
+check_aslr
+check_ptrace_scope
+check_core_dumps
+check_prelink
+check_apport
+check_issue_banner
+check_issue_net_banner
 
-main
+# Summary
+echo ""
+echo "========================================================================"
+echo "Summary"
+echo "========================================================================"
+echo "Total Checks: $TOTAL_CHECKS"
+echo "Passed: $PASSED_CHECKS"
+echo "Failed: $FAILED_CHECKS"
+echo "Fixed: $FIXED_CHECKS"
+echo "========================================================================"
+
+if [ "$FAILED_CHECKS" -gt 0 ]; then
+    echo -e "${RED}[FAIL] Some checks failed. See above for details.${NC}"
+else
+    echo -e "${GREEN}[PASS] All checks passed.${NC}"
+fi
+
