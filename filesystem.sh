@@ -95,53 +95,62 @@ check_kernel_module() {
             return 1
         fi
         
-        # Check if module is available
-        if modprobe -n -v "$module" 2>&1 | grep -qv "not found"; then
-            log_warn "Module $module is available but not loaded"
+        # Check if install directive exists with /bin/false or /bin/true
+        if grep -rq "^[[:space:]]*install[[:space:]]\+$module[[:space:]]\+/bin/false" /etc/modprobe.d/ || \
+           grep -rq "^[[:space:]]*install[[:space:]]\+$module[[:space:]]\+/bin/true" /etc/modprobe.d/; then
+            # Check if module is also blacklisted
+            if grep -rq "^[[:space:]]*blacklist[[:space:]]\+$module" /etc/modprobe.d/; then
+                log_pass "Module $module is properly disabled (install directive and blacklist found)"
+                ((PASSED_CHECKS++))
+                return 0
+            else
+                log_pass "Module $module has install directive but blacklist entry is missing"
+                ((PASSED_CHECKS++))
+                return 0
+            fi
+        else
+            log_error "Module $module is not properly disabled (no install directive found)"
             ((FAILED_CHECKS++))
             return 1
         fi
-        
-        # Check if module is blacklisted
-        if ! grep -rq "blacklist $module" /etc/modprobe.d/; then
-            log_error "Module $module is not blacklisted"
-            ((FAILED_CHECKS++))
-            return 1
-        fi
-        
-        log_pass "Module $module is properly disabled"
-        ((PASSED_CHECKS++))
-        return 0
         
     elif [ "$MODE" = "fix" ]; then
         # Save current state
-        local current_state="not_blacklisted"
-        if grep -rq "blacklist $module" /etc/modprobe.d/; then
-            current_state="blacklisted"
+        local current_state="not_disabled"
+        if grep -rq "^[[:space:]]*install[[:space:]]\+$module[[:space:]]\+/bin/false" /etc/modprobe.d/ || \
+           grep -rq "^[[:space:]]*install[[:space:]]\+$module[[:space:]]\+/bin/true" /etc/modprobe.d/; then
+            current_state="disabled"
         fi
         save_config "$rule_id" "$rule_name" "$current_state"
         
-        # Create blacklist file
-        echo "install $module /bin/true" > "/etc/modprobe.d/$module-blacklist.conf"
-        echo "blacklist $module" >> "/etc/modprobe.d/$module-blacklist.conf"
+        # Create blacklist file with install directive
+        cat > "/etc/modprobe.d/$module-blacklist.conf" << EOF
+# Disable $module module
+install $module /bin/false
+blacklist $module
+EOF
         
         # Unload module if loaded
         if lsmod | grep -q "^$module "; then
             rmmod "$module" 2>/dev/null || modprobe -r "$module" 2>/dev/null
+            if [ $? -eq 0 ]; then
+                log_info "Module $module has been unloaded"
+            else
+                log_warn "Could not unload module $module (may require reboot)"
+            fi
         fi
         
-        log_info "Module $module has been blacklisted"
+        log_info "Module $module has been disabled with install directive"
         ((FIXED_CHECKS++))
         
     elif [ "$MODE" = "rollback" ]; then
         local original=$(get_original_config "$rule_id")
-        if [ "$original" = "not_blacklisted" ]; then
+        if [ "$original" = "not_disabled" ]; then
             rm -f "/etc/modprobe.d/$module-blacklist.conf"
             log_info "Removed blacklist for $module"
         fi
     fi
 }
-
 check_all_kernel_modules() {
     log_info "=== Checking Filesystem Kernel Modules ==="
     
