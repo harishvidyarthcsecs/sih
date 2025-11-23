@@ -308,12 +308,6 @@ echo "     ${GREEN}sudo ./hardening_controller.py${NC}"
 echo "     or"
 echo "     ${GREEN}sudo ./hardening${NC}"
 echo ""
-echo "  3. Read the quick start guide:"
-echo "     ${BLUE}cat QUICKSTART.md${NC}"
-echo ""
-echo "  4. Check full documentation:"
-echo "     ${BLUE}cat README.md${NC}"
-echo ""
 
 if [ $MISSING_SCRIPTS -gt 0 ]; then
     echo "=========================================================================="
