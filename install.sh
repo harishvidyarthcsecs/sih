@@ -67,15 +67,15 @@ fi
 log_info "Checking for hardening scripts..."
 
 SCRIPTS=(
-    "01_filesystem.sh"
-    "02_package_management.sh"
-    "03_services.sh"
-    "04_network.sh"
-    "05_firewall.sh"
-    "06_access_control.sh"
-    "07_user_accounts.sh"
-    "08_logging_auditing.sh"
-    "09_system_maintenance.sh"
+    "filesystem.sh"
+    "package_mgmt.sh"
+    "services.sh"
+    "network.sh"
+    "firewall.sh"
+    "access_control.sh"
+    "user_accounts.sh"
+    "logging_auditing.sh"
+    "system_maintenance.sh"
 )
 
 MISSING_SCRIPTS=0
