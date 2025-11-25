@@ -1,0 +1,10 @@
+# Example: re-enable all common services
+sudo systemctl unmask autofs avahi-daemon isc-dhcp-server bind9 dnsmasq vsftpd slapd dovecot nfs-kernel-server nis cups rpcbind rsync smbd snmpd tftpd-hpa squid apache2 xinetd gdm postfix
+
+sudo systemctl enable autofs avahi-daemon isc-dhcp-server bind9 dnsmasq vsftpd slapd dovecot nfs-kernel-server nis cups rpcbind rsync smbd snmpd tftpd-hpa squid apache2 xinetd gdm postfix
+
+sudo systemctl start autofs avahi-daemon isc-dhcp-server bind9 dnsmasq vsftpd slapd dovecot nfs-kernel-server nis cups rpcbind rsync smbd snmpd tftpd-hpa squid apache2 xinetd gdm postfix
+
+# Reinstall removed packages
+sudo apt-get install -y nis telnet ftp rsh-client talk ldap-utils
+
