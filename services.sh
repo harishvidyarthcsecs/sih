@@ -1,11 +1,9 @@
 #!/bin/bash
-# Services and Job Schedulers Hardening Script
-# Covers: Server Services, Client Services, Time Synchronization, Cron
-# Mode: scan | fix | rollback
-# Automatically installs missing utilities if required
+# CIS-Style Services Hardening Script (with Rollback Support)
+# Modes: scan | fix | rollback
 
 MODE="${1:-scan}"
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 DB_PATH="$SCRIPT_DIR/services_hardening.db"
 BACKUP_DIR="$SCRIPT_DIR/backups"
 TOPIC="Services"
@@ -23,7 +21,7 @@ FAILED_CHECKS=0
 FIXED_CHECKS=0
 
 # =========================
-# DB Functions
+# DB Setup
 # =========================
 initialize_db() {
     if [ ! -f "$DB_PATH" ]; then
@@ -32,330 +30,206 @@ initialize_db() {
             rule_id TEXT PRIMARY KEY,
             rule_name TEXT,
             original_value TEXT,
-            current_value TEXT,
             status TEXT
         );"
     fi
 }
 
 save_config() {
-    local rule_id="$1"
-    local rule_name="$2"
-    local original_value="$3"
-    local current_value="${4:-$original_value}"
-    
-    python3 - <<EOF
-import sqlite3
-conn = sqlite3.connect('$DB_PATH')
-cursor = conn.cursor()
-cursor.execute('''
-    INSERT OR REPLACE INTO configurations 
-    (topic, rule_id, rule_name, original_value, current_value, status)
-    VALUES (?, ?, ?, ?, ?, 'stored')
-''', ('$TOPIC', '$rule_id', '$rule_name', '$original_value', '$current_value'))
-conn.commit()
-conn.close()
+    sqlite3 "$DB_PATH" <<EOF
+INSERT OR REPLACE INTO configurations
+(topic, rule_id, rule_name, original_value, status)
+VALUES ('$TOPIC', '$1', '$2', '$3', 'stored');
 EOF
 }
 
-get_original_config() {
-    local rule_id="$1"
-    python3 - <<EOF
-import sqlite3
-conn = sqlite3.connect('$DB_PATH')
-cursor = conn.cursor()
-cursor.execute('SELECT original_value FROM configurations WHERE topic=? AND rule_id=?', ('$TOPIC', '$rule_id'))
-result = cursor.fetchone()
-conn.close()
-print(result[0] if result else '')
-EOF
+get_original() {
+    sqlite3 "$DB_PATH" "SELECT original_value FROM configurations WHERE rule_id='$1';"
 }
 
-# =========================
-# Logging
-# =========================
 log_info() { echo -e "${GREEN}[INFO]${NC} $1"; }
-log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
-log_error() { echo -e "${RED}[FAIL]${NC} $1"; }
 log_pass() { echo -e "${GREEN}[PASS]${NC} $1"; }
+log_fail() { echo -e "${RED}[FAIL]${NC} $1"; }
+log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
 
 # =========================
-# Utilities Installer
+# Service Status Checker (Improved)
 # =========================
-install_if_missing() {
-    local cmd="$1"
-    local pkg="$2"
-    if ! command -v "$cmd" &>/dev/null; then
-        log_warn "$cmd not found. Installing $pkg..."
-        apt-get update -qq
-        DEBIAN_FRONTEND=noninteractive apt-get install -y "$pkg"
-    fi
+is_disabled() {
+    local state
+    state=$(systemctl is-enabled "$1" 2>/dev/null)
+    case "$state" in
+        disabled|masked|static|indirect|not-found)
+            return 0 ;;
+        *)  return 1 ;;
+    esac
+}
+
+disable_service() {
+    systemctl stop "$1" 2>/dev/null
+    systemctl disable "$1" 2>/dev/null
+    systemctl mask "$1" 2>/dev/null
+}
+
+enable_service() {
+    systemctl unmask "$1" 2>/dev/null
+    systemctl enable "$1" 2>/dev/null
+    systemctl start "$1" 2>/dev/null
 }
 
 # =========================
-# 1. Server Services
+# Service Hardening
 # =========================
-check_service_disabled() {
-    local rule_id="$1"
-    local rule_name="$2"
-    local service="$3"
-    
+SERVER_SERVICES=(
+autofs avahi-daemon isc-dhcp-server bind9 dnsmasq vsftpd slapd dovecot
+nfs-kernel-server nis cups rpcbind rsync smbd snmpd tftpd-hpa squid apache2
+xinetd gdm postfix
+)
+
+SERVER_RULES=(
+"Disable autofs"
+"Disable avahi-daemon"
+"Disable DHCP server"
+"Disable DNS server (bind9)"
+"Disable dnsmasq"
+"Disable FTP server"
+"Disable LDAP server"
+"Disable Dovecot (IMAP/POP3)"
+"Disable NFS server"
+"Disable NIS server"
+"Disable Cups printing service"
+"Disable rpcbind"
+"Disable rsync daemon"
+"Disable Samba"
+"Disable snmp daemon"
+"Disable tftp server"
+"Disable Squid proxy"
+"Disable Apache2 web server"
+"Disable xinetd"
+"Disable GDM (GUI login manager)"
+"Disable Postfix MTA"
+)
+
+check_and_fix_service() {
+    local id="$1" name="$2" svc="$3"
     ((TOTAL_CHECKS++))
-    echo ""
-    echo "Checking: $rule_name"
-    
+
+    echo -e "\nChecking: $name"
+
     if [ "$MODE" = "scan" ]; then
-        if systemctl is-enabled "$service" 2>/dev/null | grep -q "disabled"; then
-            log_pass "$service is disabled"
+        if is_disabled "$svc"; then
+            log_pass "$svc is disabled"
             ((PASSED_CHECKS++))
         else
-            log_error "$service is enabled"
+            log_fail "$svc is enabled"
             ((FAILED_CHECKS++))
         fi
     elif [ "$MODE" = "fix" ]; then
-        save_config "$rule_id" "$rule_name" "$(systemctl is-enabled $service 2>/dev/null)"
-        systemctl stop "$service" 2>/dev/null
-        systemctl disable "$service" 2>/dev/null
-        systemctl mask "$service" 2>/dev/null
-        log_info "$service stopped, disabled, and masked"
+        save_config "$id" "$name" "$(systemctl is-enabled "$svc" 2>/dev/null)"
+        disable_service "$svc"
+        log_info "$svc disabled + masked"
         ((FIXED_CHECKS++))
-    elif [ "$MODE" = "rollback" ]; then
-        local original=$(get_original_config "$rule_id")
-        if [ "$original" = "enabled" ]; then
-            systemctl unmask "$service"
-            systemctl enable "$service"
-            systemctl start "$service"
+    else # rollback
+        original=$(get_original "$id")
+        if [[ "$original" == "enabled" ]]; then
+            enable_service "$svc"
+            log_info "$svc restored to enabled"
         fi
     fi
 }
 
-SERVER_SERVICES=(autofs avahi-daemon isc-dhcp-server bind9 dnsmasq vsftpd slapd dovecot nfs-kernel-server nis cups rpcbind rsync smbd snmpd tftpd-hpa squid apache2 xinetd gdm postfix)
-SERVER_RULES=( \
-"Ensure autofs services are not in use" \
-"Ensure avahi daemon services are not in use" \
-"Ensure dhcp server services are not in use" \
-"Ensure dns server services are not in use" \
-"Ensure dnsmasq services are not in use" \
-"Ensure ftp server services are not in use" \
-"Ensure ldap server services are not in use" \
-"Ensure message access server services are not in use" \
-"Ensure network file system services are not in use" \
-"Ensure nis server services are not in use" \
-"Ensure print server services are not in use" \
-"Ensure rpcbind services are not in use" \
-"Ensure rsync services are not in use" \
-"Ensure samba file server services are not in use" \
-"Ensure snmp services are not in use" \
-"Ensure tftp server services are not in use" \
-"Ensure web proxy server services are not in use" \
-"Ensure web server services are not in use" \
-"Ensure xinetd services are not in use" \
-"Ensure X window server services are not in use" \
-"Ensure mail transfer agent is configured for local-only mode" \
+# =========================
+# Client Packages Hardening
+# =========================
+CLIENT_PACKAGES=(nis rsh-client talk telnet ftp ldap-utils)
+CLIENT_RULES=(
+"Remove NIS client"
+"Remove rsh client"
+"Remove talk client"
+"Remove telnet client"
+"Remove ftp client"
+"Remove ldap-utils"
 )
 
-# =========================
-# 2. Client Services
-# =========================
-CLIENT_PACKAGES=(nis rsh-client talk telnet ldap-utils ftp)
-CLIENT_RULES=( \
-"Ensure NIS Client is not installed" \
-"Ensure rsh client is not installed" \
-"Ensure talk client is not installed" \
-"Ensure telnet client is not installed" \
-"Ensure ldap client is not installed" \
-"Ensure ftp client is not installed" \
-)
-
-check_package_removed() {
-    local rule_id="$1"
-    local rule_name="$2"
-    local pkg="$3"
-    
+check_and_fix_package() {
+    local id="$1" name="$2" pkg="$3"
     ((TOTAL_CHECKS++))
-    echo ""
-    echo "Checking: $rule_name"
-    
+    echo -e "\nChecking: $name"
+
     if [ "$MODE" = "scan" ]; then
         if dpkg -l | grep -q "^ii.*$pkg"; then
-            log_error "$pkg is installed"
+            log_fail "$pkg installed"
             ((FAILED_CHECKS++))
         else
-            log_pass "$pkg is not installed"
+            log_pass "$pkg not installed"
             ((PASSED_CHECKS++))
         fi
     elif [ "$MODE" = "fix" ]; then
         if dpkg -l | grep -q "^ii.*$pkg"; then
-            save_config "$rule_id" "$rule_name" "installed"
-            apt-get remove -y "$pkg"
+            save_config "$id" "$name" "installed"
+            apt remove -y "$pkg"
             log_info "$pkg removed"
             ((FIXED_CHECKS++))
         fi
-    elif [ "$MODE" = "rollback" ]; then
-        local original=$(get_original_config "$rule_id")
-        if [ "$original" = "installed" ]; then
-            apt-get install -y "$pkg"
-            log_info "$pkg reinstalled"
+    else
+        original=$(get_original "$id")
+        if [[ "$original" = "installed" ]]; then
+            apt install -y "$pkg"
+            log_info "$pkg restored"
         fi
     fi
 }
 
 # =========================
-# 3. Time Synchronization
+# Time Sync — Chrony only (CIS)
 # =========================
-check_timesyncd() {
+check_time_sync() {
     ((TOTAL_CHECKS++))
-    echo ""
-    echo "Checking: systemd-timesyncd"
-
-    install_if_missing timedatectl systemd-timesyncd
+    echo -e "\nChecking: Time Sync — only chrony allowed"
 
     if [ "$MODE" = "scan" ]; then
-        if systemctl is-enabled systemd-timesyncd &>/dev/null && systemctl is-active systemd-timesyncd &>/dev/null; then
-            log_pass "systemd-timesyncd is enabled and running"
+        if systemctl is-active chrony >/dev/null && systemctl is-enabled chrony >/dev/null; then
+            log_pass "Chrony active"
             ((PASSED_CHECKS++))
         else
-            log_error "systemd-timesyncd not properly configured"
+            log_fail "Chrony not configured"
             ((FAILED_CHECKS++))
         fi
     elif [ "$MODE" = "fix" ]; then
-        save_config "TIMESYNCD" "systemd-timesyncd" "$(systemctl is-enabled systemd-timesyncd 2>/dev/null)"
-        systemctl enable systemd-timesyncd
-        systemctl start systemd-timesyncd
-        log_info "systemd-timesyncd enabled and started"
-        ((FIXED_CHECKS++))
-    fi
-}
+        save_config "TIME" "Time sync" "chrony"
+        systemctl stop systemd-timesyncd 2>/dev/null
+        systemctl disable systemd-timesyncd 2>/dev/null
+        systemctl mask systemd-timesyncd 2>/dev/null
 
-check_chrony() {
-    ((TOTAL_CHECKS++))
-    echo ""
-    echo "Checking: chrony"
-
-    install_if_missing chronyd chrony
-
-    if [ "$MODE" = "scan" ]; then
-        if systemctl is-enabled chrony &>/dev/null && systemctl is-active chrony &>/dev/null; then
-            log_pass "chrony is enabled and running"
-            ((PASSED_CHECKS++))
-        else
-            log_error "chrony not properly configured"
-            ((FAILED_CHECKS++))
-        fi
-    elif [ "$MODE" = "fix" ]; then
-        save_config "CHRONY" "chrony" "$(systemctl is-enabled chrony 2>/dev/null)"
+        apt install -y chrony
         systemctl enable chrony
         systemctl start chrony
-        log_info "chrony enabled and started"
+        log_info "Chrony enabled, timesyncd disabled"
         ((FIXED_CHECKS++))
-    fi
-}
-
-check_single_timesyncd() {
-    ((TOTAL_CHECKS++))
-    echo ""
-    echo "Checking: Only one time synchronization daemon is running"
-    local active_count=0
-    systemctl is-active chrony &>/dev/null && ((active_count++))
-    systemctl is-active systemd-timesyncd &>/dev/null && ((active_count++))
-    if [ $active_count -eq 1 ]; then
-        log_pass "Single time synchronization daemon is running"
-        ((PASSED_CHECKS++))
     else
-        log_error "Multiple or no time sync daemons active"
-        ((FAILED_CHECKS++))
+        :
     fi
 }
 
 # =========================
-# 4. Cron / Job Schedulers
+# Approved Ports Check
 # =========================
-check_cron_daemon() {
+check_ports() {
     ((TOTAL_CHECKS++))
-    echo ""
-    echo "Checking: cron daemon"
-    if [ "$MODE" = "scan" ]; then
-        if systemctl is-enabled cron &>/dev/null && systemctl is-active cron &>/dev/null; then
-            log_pass "cron daemon enabled and active"
-            ((PASSED_CHECKS++))
-        else
-            log_error "cron daemon not enabled/active"
-            ((FAILED_CHECKS++))
-        fi
-    elif [ "$MODE" = "fix" ]; then
-        save_config "CRON-DAEMON" "cron daemon" "$(systemctl is-enabled cron 2>/dev/null)"
-        systemctl enable cron
-        systemctl start cron
-        log_info "cron daemon enabled and started"
-        ((FIXED_CHECKS++))
-    fi
-}
+    echo -e "\nChecking: Only approved ports open"
+    local allowed="22 53 80 443 123"
+    local bad=""
 
-check_cron_permissions() {
-    local path="$1"
-    ((TOTAL_CHECKS++))
-    echo ""
-    echo "Checking permissions on $path"
-    
-    if [ "$MODE" = "scan" ]; then
-        perms=$(stat -c %a "$path")
-        if [ "$perms" = "600" ] || [ "$perms" = "700" ]; then
-            log_pass "$path permissions OK"
-            ((PASSED_CHECKS++))
-        else
-            log_error "$path permissions NOT OK: $perms"
-            ((FAILED_CHECKS++))
-        fi
-    elif [ "$MODE" = "fix" ]; then
-        save_config "CRON-$path" "Cron permissions $path" "$(stat -c %a "$path")"
-        chmod 600 "$path" 2>/dev/null || chmod 700 "$path" 2>/dev/null
-        log_info "$path permissions fixed"
-        ((FIXED_CHECKS++))
-    fi
-}
+    while read -r line; do
+        port=$(echo "$line" | awk -F':' '{print $NF}')
+        [[ "$allowed" =~ $port ]] || bad="$bad $port"
+    done < <(ss -tuln | awk 'NR>1 {print $5}')
 
-check_crontab_restriction() {
-    ((TOTAL_CHECKS++))
-    echo ""
-    echo "Checking: crontab access restriction"
-    if [ -f /etc/cron.allow ]; then
-        log_pass "/etc/cron.allow exists; access restricted"
+    if [ -z "$bad" ]; then
+        log_pass "No unauthorized ports"
         ((PASSED_CHECKS++))
     else
-        if [ "$MODE" = "fix" ]; then
-            touch /etc/cron.allow
-            chmod 600 /etc/cron.allow
-            log_info "/etc/cron.allow created"
-            ((FIXED_CHECKS++))
-        else
-            log_error "/etc/cron.allow missing; check cron access"
-            ((FAILED_CHECKS++))
-        fi
-    fi
-}
-
-check_approved_services() {
-    ((TOTAL_CHECKS++))
-    echo ""
-    echo "Checking: Only approved services are listening on network interfaces"
-    local allowed_ports="22 53 80 443"
-    local listening=$(ss -tuln | awk 'NR>1 {print $5}' | cut -d: -f2)
-    local unauthorized=""
-    for port in $listening; do
-        if ! grep -qw "$port" <<< "$allowed_ports"; then
-            if [ "$MODE" = "fix" ]; then
-                pid=$(lsof -i :$port -t)
-                [ -n "$pid" ] && kill -9 $pid
-                log_info "Unauthorized process on port $port killed"
-            fi
-            unauthorized="$unauthorized $port"
-        fi
-    done
-    if [ -z "$unauthorized" ]; then
-        log_pass "No unauthorized services are listening"
-        ((PASSED_CHECKS++))
-    else
-        log_error "Unauthorized services listening on ports:$unauthorized"
+        log_fail "Unauthorized: $bad"
         ((FAILED_CHECKS++))
     fi
 }
@@ -363,50 +237,34 @@ check_approved_services() {
 # =========================
 # Main Execution
 # =========================
+
 initialize_db
 
-# Server services
 for i in "${!SERVER_SERVICES[@]}"; do
-    check_service_disabled "SRV-$i" "${SERVER_RULES[$i]}" "${SERVER_SERVICES[$i]}"
+    check_and_fix_service "SRV-$i" "${SERVER_RULES[$i]}" "${SERVER_SERVICES[$i]}"
 done
 
-# Client packages
 for i in "${!CLIENT_PACKAGES[@]}"; do
-    check_package_removed "CLT-$i" "${CLIENT_RULES[$i]}" "${CLIENT_PACKAGES[$i]}"
+    check_and_fix_package "CLT-$i" "${CLIENT_RULES[$i]}" "${CLIENT_PACKAGES[$i]}"
 done
 
-# Time sync
-check_timesyncd
-check_chrony
-check_single_timesyncd
-
-# Cron
-check_cron_daemon
-
-CRON_PATHS=("/etc/crontab" "/etc/cron.hourly" "/etc/cron.daily" "/etc/cron.weekly" "/etc/cron.monthly" "/etc/cron.d")
-for path in "${CRON_PATHS[@]}"; do
-    [ -e "$path" ] && check_cron_permissions "$path"
-done
-check_crontab_restriction
-
-# Only approved services
-check_approved_services
+check_time_sync
+check_ports
 
 # =========================
 # Summary
 # =========================
-echo ""
-echo "========================================================================"
+echo -e "\n========================================================"
 echo "Summary"
-echo "========================================================================"
+echo "========================================================"
 echo "Total Checks: $TOTAL_CHECKS"
 echo "Passed: $PASSED_CHECKS"
 echo "Failed: $FAILED_CHECKS"
 echo "Fixed: $FIXED_CHECKS"
-echo "========================================================================"
+echo "========================================================"
 
 if [ "$FAILED_CHECKS" -gt 0 ]; then
-    echo -e "${RED}[FAIL] Some checks failed. See above for details.${NC}"
+    echo -e "${RED}[FAIL] Issues detected.${NC}"
 else
     echo -e "${GREEN}[PASS] All checks passed.${NC}"
 fi
