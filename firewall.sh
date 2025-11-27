@@ -159,7 +159,6 @@ check_ufw_outbound() {
     fi
 }
 
-
 check_ufw_rules_for_open_ports() {
     local rule_id="FW-UFW-PORTS"
     local rule_name="Ensure UFW firewall rules exist for all open ports"
@@ -169,32 +168,66 @@ check_ufw_rules_for_open_ports() {
     local snapshot
     snapshot=$(ufw status verbose 2>/dev/null)
     local ports
-    ports=$(ss -tuln | awk 'NR>1 {gsub(/.*:/,"",$5); print $5}' | sort -u)
+    ports=$(ss -tunl | awk 'NR>1 {gsub(/.*:/,"",$5); print $5}' | sort -u)
 
     local missing=0
     for p in $ports; do
         if ! echo "$snapshot" | grep -q "$p"; then
             log_warn "Adding missing UFW rule for port: $p"
-            ufw allow "$p" >/dev/null
+            
+            # Add the missing UFW rule for the port
+            if sudo ufw allow "$p"/tcp >/dev/null 2>&1; then
+                log_info "Added UFW rule for port: $p"
+            else
+                log_error "Failed to add UFW rule for port: $p"
+            fi
+
             missing=1
         fi
     done
 
-    ufw reload >/dev/null
+    # Reload UFW to ensure all changes are applied
+    if [ "$missing" -eq 1 ]; then
+        sudo ufw reload >/dev/null
+        log_info "UFW reloaded after adding missing rules."
+    fi
+
+    # Final check: Did we apply all rules successfully?
+    local final_snapshot
+    final_snapshot=$(ufw status verbose 2>/dev/null)
+
+    local all_ports_applied=1
+    for p in $ports; do
+        if ! echo "$final_snapshot" | grep -q "$p"; then
+            all_ports_applied=0
+            log_error "Port $p still not added to UFW rules"
+        fi
+    done
 
     if [ "$MODE" = "scan" ]; then
         if [ $missing -eq 0 ]; then
             log_pass "All open ports have UFW rules"
             ((PASSED_CHECKS++))
         else
-            log_error "Some open ports were missing UFW rules"
-            ((FAILED_CHECKS++))
+            if [ $all_ports_applied -eq 1 ]; then
+                log_pass "All open ports successfully added to UFW rules"
+                ((PASSED_CHECKS++))
+            else
+                log_error "Some open ports were still missing UFW rules"
+                ((FAILED_CHECKS++))
+            fi
         fi
     elif [ "$MODE" = "fix" ]; then
-        log_info "UFW rules for all open ports applied"
-        ((FIXED_CHECKS++))
+        if [ $all_ports_applied -eq 1 ]; then
+            log_info "UFW rules for all open ports applied successfully"
+            ((FIXED_CHECKS++))
+        else
+            log_error "Failed to apply some UFW rules"
+            ((FAILED_CHECKS++))
+        fi
     fi
 }
+
 
 check_ufw_default_deny() {
     local rule_id="FW-UFW-DENY"

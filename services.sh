@@ -83,7 +83,7 @@ enable_service() {
 SERVER_SERVICES=(
 autofs avahi-daemon isc-dhcp-server bind9 dnsmasq vsftpd slapd dovecot
 nfs-kernel-server nis cups rpcbind rsync smbd snmpd tftpd-hpa squid apache2
-xinetd gdm postfix
+xinetd gdm postfix nfs-common telnetd rsh-server talkd nscd ntpdate lpd rsyslog
 )
 
 SERVER_RULES=(
@@ -108,6 +108,27 @@ SERVER_RULES=(
 "Disable xinetd"
 "Disable GDM (GUI login manager)"
 "Disable Postfix MTA"
+"Disable NFS common"
+"Disable Telnet server"
+"Disable rsh server"
+"Disable talk server"
+"Disable nscd service"
+"Disable ntpdate service"
+"Disable LPD printing service"
+"Disable rsyslog"
+)
+
+# =========================
+# Client Packages Hardening
+# =========================
+CLIENT_PACKAGES=(nis rsh-client talk telnet ftp ldap-utils)
+CLIENT_RULES=(
+"Remove NIS client"
+"Remove rsh client"
+"Remove talk client"
+"Remove telnet client"
+"Remove ftp client"
+"Remove ldap-utils"
 )
 
 check_and_fix_service() {
@@ -115,8 +136,7 @@ check_and_fix_service() {
     ((TOTAL_CHECKS++))
 
     echo -e "\nChecking: $name"
-
-    if [ "$MODE" = "scan" ]; then
+        if [ "$MODE" = "scan" ]; then
         if is_disabled "$svc"; then
             log_pass "$svc is disabled"
             ((PASSED_CHECKS++))
@@ -141,16 +161,6 @@ check_and_fix_service() {
 # =========================
 # Client Packages Hardening
 # =========================
-CLIENT_PACKAGES=(nis rsh-client talk telnet ftp ldap-utils)
-CLIENT_RULES=(
-"Remove NIS client"
-"Remove rsh client"
-"Remove talk client"
-"Remove telnet client"
-"Remove ftp client"
-"Remove ldap-utils"
-)
-
 check_and_fix_package() {
     local id="$1" name="$2" pkg="$3"
     ((TOTAL_CHECKS++))
@@ -235,21 +245,112 @@ check_ports() {
 }
 
 # =========================
+# Ensure only approved services are listening on a network interface
+# =========================
+check_approved_services() {
+    ((TOTAL_CHECKS++))
+    echo -e "\nChecking: Only approved services are listening on a network interface"
+    
+    local allowed_services=("sshd" "httpd" "https")
+    local unauthorized_services=""
+    
+    while read -r service; do
+        service_name=$(echo "$service" | awk '{print $1}')
+        if [[ ! " ${allowed_services[@]} " =~ " ${service_name} " ]]; then
+            unauthorized_services="$unauthorized_services $service_name"
+        fi
+    done < <(ss -tuln | awk 'NR>1 {print $1}')
+    
+    if [ -z "$unauthorized_services" ]; then
+        log_pass "Only approved services are listening"
+        ((PASSED_CHECKS++))
+    else
+        log_fail "Unauthorized services: $unauthorized_services"
+        ((FAILED_CHECKS++))
+    fi
+}
+
+# =========================
+# Ensure rsyslog is running and disabled for remote logging
+# =========================
+check_rsyslog() {
+    ((TOTAL_CHECKS++))
+    echo -e "\nChecking: Ensure rsyslog is running and disabled for remote logging"
+    
+    if systemctl is-active rsyslog >/dev/null && ! grep -q "^*.* @@.*" /etc/rsyslog.conf; then
+        log_pass "rsyslog is active and not configured for remote logging"
+        ((PASSED_CHECKS++))
+    else
+        log_fail "rsyslog is either inactive or configured for remote logging"
+        ((FAILED_CHECKS++))
+    fi
+}
+
+# =========================
+# Ensure NFS Client is not installed
+# =========================
+check_nfs_client() {
+    ((TOTAL_CHECKS++))
+    echo -e "\nChecking: Ensure NFS client is not installed"
+    
+    if dpkg -l | grep -q "^ii.*nfs-common"; then
+        log_fail "NFS client (nfs-common) is installed"
+        ((FAILED_CHECKS++))
+    else
+        log_pass "NFS client (nfs-common) is not installed"
+        ((PASSED_CHECKS++))
+    fi
+}
+
+# =========================
+# Ensure mail server is configured for local-only mode
+# =========================
+check_mail_server() {
+    ((TOTAL_CHECKS++))
+    echo -e "\nChecking: Ensure mail server is configured for local-only mode"
+    
+    if systemctl is-enabled postfix >/dev/null && ! grep -q "^mydestination = \$myhostname, localhost.$" /etc/postfix/main.cf; then
+        log_fail "Mail server (Postfix) is not configured for local-only mode"
+        ((FAILED_CHECKS++))
+    else
+        log_pass "Mail server (Postfix) is configured for local-only mode"
+        ((PASSED_CHECKS++))
+    fi
+}
+
+# =========================
 # Main Execution
 # =========================
 
 initialize_db
 
+# Check and fix server services
 for i in "${!SERVER_SERVICES[@]}"; do
     check_and_fix_service "SRV-$i" "${SERVER_RULES[$i]}" "${SERVER_SERVICES[$i]}"
 done
 
+# Check and fix client packages
 for i in "${!CLIENT_PACKAGES[@]}"; do
     check_and_fix_package "CLT-$i" "${CLIENT_RULES[$i]}" "${CLIENT_PACKAGES[$i]}"
 done
 
+# Check time sync
 check_time_sync
+
+# Check approved ports
 check_ports
+
+# Check approved services
+check_approved_services
+
+# Ensure rsyslog is running and disabled for remote logging
+check_rsyslog
+
+# Ensure NFS Client is not installed
+check_nfs_client
+
+# Ensure mail server is configured for local-only mode
+check_mail_server
 
 # =========================
 # Summary
@@ -268,4 +369,3 @@ if [ "$FAILED_CHECKS" -gt 0 ]; then
 else
     echo -e "${GREEN}[PASS] All checks passed.${NC}"
 fi
-
