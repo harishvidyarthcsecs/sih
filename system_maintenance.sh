@@ -1,332 +1,536 @@
 #!/bin/bash
-# System Maintenance Hardening Script - 23 Policies
+
+# System Hardening Script
+# Modes: scan | fix | rollback
+# Usage: sudo bash system_hardening.sh <mode>
 
 MODE="${1:-scan}"
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-BACKUP_DIR="$SCRIPT_DIR/backups"
-LOG_FILE="$SCRIPT_DIR/system_maintenance.log"
-
-mkdir -p "$BACKUP_DIR"
-
-# Colors for log output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-BLUE='\033[0;34m'
-YELLOW='\033[1;33m'
-NC='\033[0m'
-
 TOTAL_CHECKS=0
 PASSED_CHECKS=0
 FAILED_CHECKS=0
 FIXED_CHECKS=0
-MANUAL_CHECKS=0
 
-# ===================================================================
-# Logging Functions
-# ===================================================================
-log_info()  { echo -e "${GREEN}[INFO]${NC} $1"; echo "$(date): [INFO] $1" >> "$LOG_FILE"; }
-log_pass()  { echo -e "${GREEN}[PASS]${NC} $1"; ((PASSED_CHECKS++)); echo "$(date): [PASS] $1" >> "$LOG_FILE"; }
-log_fixed() { echo -e "${BLUE}[FIXED]${NC} $1"; ((FIXED_CHECKS++)); echo "$(date): [FIXED] $1" >> "$LOG_FILE"; }
-log_warn()  { echo -e "${YELLOW}[WARN]${NC} $1"; echo "$(date): [WARN] $1" >> "$LOG_FILE"; }
-log_error() { echo -e "${RED}[FAIL]${NC} $1"; ((FAILED_CHECKS++)); echo "$(date): [FAIL] $1" >> "$LOG_FILE"; }
-log_manual() { echo -e "${YELLOW}[MANUAL]${NC} $1"; ((MANUAL_CHECKS++)); echo "$(date): [MANUAL] $1" >> "$LOG_FILE"; }
+# Helper function to log information
+log_info() { if [ "$MODE" != "scan" ]; then echo -e "[INFO] $1"; fi; }
+log_pass() { echo -e "[PASS] $1"; }
+log_fail() { echo -e "[FAIL] $1"; }
+log_warn() { if [ "$MODE" != "scan" ]; then echo -e "[WARN] $1"; fi; }
 
-# ===================================================================
-# Utility Functions
-# ===================================================================
-backup_file() {
-    local file=$1
-    if [ -f "$file" ]; then
-        cp "$file" "$BACKUP_DIR/$(basename $file).$(date +%Y%m%d_%H%M%S)" 2>/dev/null
-        return $?
+# Function to ensure we have sudo privileges for commands requiring elevated access
+ensure_sudo() {
+    if [ "$EUID" -ne 0 ]; then
+        echo "This script requires elevated privileges. Please re-run it with sudo."
+        exit 1
     fi
-    return 1
 }
 
-# Policy i-x: File Permissions
-check_permissions() {
-    local file=$1
-    local expected=$2
-    local owner=${3:-root}
-    local group=${4:-root}
-    local policy_num=$5
+# =========================
+# 1. Check and Fix Permissions on Critical Files
+# =========================
+check_and_fix_permissions() {
+    files=(
+        "/etc/passwd"
+        "/etc/passwd-"
+        "/etc/group"
+        "/etc/group-"
+        "/etc/shadow"
+        "/etc/shadow-"
+        "/etc/gshadow"
+        "/etc/gshadow-"
+        "/etc/shells"
+        "/etc/security/opasswd"
+    )
+    permissions_map=(
+        "/etc/passwd=644"
+        "/etc/passwd-=644"
+        "/etc/group=644"
+        "/etc/group-=644"
+        "/etc/shadow=640"
+        "/etc/shadow-=640"
+        "/etc/gshadow=640"
+        "/etc/gshadow-=640"
+        "/etc/shells=644"
+        "/etc/security/opasswd=600"
+    )
 
-    ((TOTAL_CHECKS++))
-    if [ ! -e "$file" ]; then
-        log_error "P$policy_num: $file missing"
-        return 1
-    fi
+    for file in "${files[@]}"; do
+        ((TOTAL_CHECKS++))
+        if [ -f "$file" ]; then
+            expected_permission=$(echo "${permissions_map[@]}" | grep "$file" | cut -d'=' -f2)
+            current_permission=$(stat -c %a "$file")
 
-    perms=$(stat -c "%a" "$file" 2>/dev/null)
-    if [ $? -ne 0 ]; then
-        log_error "P$policy_num: Cannot read permissions for $file"
-        return 1
-    fi
-    
-    perms=$(printf "%03o" "$perms")
-    file_owner=$(stat -c "%U" "$file")
-    file_group=$(stat -c "%G" "$file")
-
-    if [ "$perms" == "$expected" ] && [ "$file_owner" == "$owner" ] && [ "$file_group" == "$group" ]; then
-        log_pass "P$policy_num: $file permissions correct ($perms $owner:$group)"
-        return 0
-    else
-        if [ "$MODE" == "fix" ]; then
-            if ! backup_file "$file"; then
-                log_warn "P$policy_num: Could not backup $file, attempting fix anyway..."
-            fi
-
-            echo "Fixing permissions on $file..."
-            echo "Current: $perms $file_owner:$file_group"
-            echo "Expected: $expected $owner:$group"
-            
-            # Fix ownership first
-            if ! chown "$owner:$group" "$file" 2>/dev/null; then
-                log_error "P$policy_num: Failed to change ownership of $file"
-                return 1
-            fi
-            
-            # Fix permissions
-            if ! chmod "$expected" "$file" 2>/dev/null; then
-                log_error "P$policy_num: Failed to change permissions of $file"
-                return 1
-            fi
-            
-            # Verify the fix
-            sleep 1
-            new_perms=$(stat -c "%a" "$file")
-            new_owner=$(stat -c "%U" "$file")
-            new_group=$(stat -c "%G" "$file")
-            
-            if [ "$new_perms" == "$expected" ] && [ "$new_owner" == "$owner" ] && [ "$new_group" == "$group" ]; then
-                log_fixed "P$policy_num: $file permissions fixed to $expected ($new_owner:$new_group)"
-                return 0
+            if [ "$current_permission" == "$expected_permission" ]; then
+                log_pass "$file has correct permissions"
+                ((PASSED_CHECKS++))
+            elif [ "$MODE" == "fix" ]; then
+                ensure_sudo
+                sudo chmod "$expected_permission" "$file"
+                log_info "Fixed permissions for $file"
+                ((FIXED_CHECKS++))
             else
-                log_error "P$policy_num: Permissions reverted on $file (now $new_perms $new_owner:$new_group)"
-                log_warn "P$policy_num: System has automatic permission enforcement"
-                return 1
+                log_fail "$file has incorrect permissions"
+                ((FAILED_CHECKS++))
             fi
         else
-            log_error "P$policy_num: $file permissions incorrect ($perms $file_owner:$file_group, expected $expected $owner:$group)"
-            return 1
+            log_warn "$file does not exist"
         fi
-    fi
+    done
 }
 
-# Policy xi: Ensure world writable files and directories are secured
-check_world_writable() {
+# =========================
+# 2. Ensure No World Writable Files
+# =========================
+check_world_writable_files() {
     ((TOTAL_CHECKS++))
-    local found_risky=false
-    
-    # Check for world-writable files excluding virtual filesystems
-    while IFS= read -r -d '' file; do
-        if [[ ! "$file" =~ ^/proc/ ]] && [[ ! "$file" =~ ^/sys/ ]] && [[ ! "$file" =~ ^/dev/ ]] && 
-           [[ ! "$file" =~ ^/run/ ]] && [[ ! "$file" =~ ^/tmp/ ]] && [ -f "$file" ]; then
-            if [ "$found_risky" = false ]; then
-                found_risky=true
-                log_error "Pxi: World-writable files found:"
-            fi
-            log_error "Pxi:   $file"
+    if [ "$MODE" == "scan" ]; then
+        bad_files=$(find / -type f -perm -0002)
+        if [ -n "$bad_files" ]; then
+            log_fail "World writable files found: $bad_files"
+            ((FAILED_CHECKS++))
+        else
+            log_pass "No world writable files found"
+            ((PASSED_CHECKS++))
         fi
-    done < <(find / -type f -perm -0002 -print0 2>/dev/null)
-    
-    # Check for world-writable directories excluding standard ones
-    while IFS= read -r -d '' dir; do
-        if [[ ! "$dir" =~ ^/proc/ ]] && [[ ! "$dir" =~ ^/sys/ ]] && [[ ! "$dir" =~ ^/dev/ ]] &&
-           [[ ! "$dir" =~ ^/run/ ]] && [[ ! "$dir" =~ ^/tmp/ ]] && [[ ! "$dir" =~ ^/var/tmp/ ]] &&
-           [[ ! "$dir" =~ ^/var/cache/ ]] && [ -d "$dir" ]; then
-            if [ "$found_risky" = false ]; then
-                found_risky=true
-                log_error "Pxi: World-writable directories found:"
-            fi
-            log_error "Pxi:   $dir"
-            if [ "$MODE" == "fix" ]; then
-                echo "Fixing permissions on $dir..."
-                chmod o-w "$dir" 2>/dev/null && log_fixed "Pxi: Fixed world-writable directory $dir"
-            fi
-        fi
-    done < <(find / -type d -perm -0002 -print0 2>/dev/null)
-    
-    if [ "$found_risky" != true ]; then
-        log_pass "Pxi: No unsafe world-writable files or directories found"
+    elif [ "$MODE" == "fix" ]; then
+        ensure_sudo
+        sudo find / -type f -perm -0002 -exec chmod o-w {} \;
+        sudo find / -type d -perm -0002 -exec chmod o-w {} \;
+        log_info "Fixed world writable files and directories"
+        ((FIXED_CHECKS++))
     fi
 }
 
-# ===================================================================
-# Policy 7.2.1: Ensure accounts in /etc/passwd use shadowed passwords
+# =========================
+# 3. Ensure No Files/Directories Without an Owner and Group
+# =========================
+check_no_owner_group() {
+    ((TOTAL_CHECKS++))
+    if [ "$MODE" == "scan" ]; then
+        files_without_owner=$(find / -nouser -o -nogroup)
+        if [ -n "$files_without_owner" ]; then
+            log_fail "Files without owners or groups: $files_without_owner"
+            ((FAILED_CHECKS++))
+        else
+            log_pass "No files without owners or groups"
+            ((PASSED_CHECKS++))
+        fi
+    elif [ "$MODE" == "fix" ]; then
+        ensure_sudo
+        sudo find / -nouser -exec chown root:root {} \;
+        sudo find / -nogroup -exec chown root:root {} \;
+        log_info "Fixed files without owners/groups"
+        ((FIXED_CHECKS++))
+    fi
+}
+
+# =========================
+# 4. Ensure SUID and SGID Files Are Reviewed (Manual)
+# =========================
+check_suid_sgid_files() {
+    ((TOTAL_CHECKS++))
+    if [ "$MODE" == "scan" ]; then
+        suid_files=$(find / -type f -perm -4000)
+        sgid_files=$(find / -type f -perm -2000)
+        if [ -n "$suid_files" ]; then
+            log_warn "SUID files found: $suid_files"
+            ((FAILED_CHECKS++))
+        else
+            log_pass "No SUID files found"
+            ((PASSED_CHECKS++))
+        fi
+        if [ -n "$sgid_files" ]; then
+            log_warn "SGID files found: $sgid_files"
+            ((FAILED_CHECKS++))
+        else
+            log_pass "No SGID files found"
+            ((PASSED_CHECKS++))
+        fi
+    fi
+}
+
+# =========================
+# 5. Ensure All Groups in /etc/passwd Exist in /etc/group
+# =========================
+check_groups_exist() {
+    ((TOTAL_CHECKS++))
+    if [ "$MODE" == "scan" ]; then
+        groups_in_passwd=$(awk -F: '{print $4}' /etc/passwd | sort -u)
+        groups_in_group=$(awk -F: '{print $1}' /etc/group | sort -u)
+        missing_groups=$(comm -23 <(echo "$groups_in_passwd") <(echo "$groups_in_group"))
+        if [ -n "$missing_groups" ]; then
+            log_fail "Groups in /etc/passwd not found in /etc/group: $missing_groups"
+            ((FAILED_CHECKS++))
+        else
+            log_pass "All groups in /etc/passwd exist in /etc/group"
+            ((PASSED_CHECKS++))
+        fi
+    fi
+}
+
+# =========================
+# 6. Ensure Shadow Group is Empty
+# =========================
+check_shadow_group_empty() {
+    ((TOTAL_CHECKS++))
+    if [ "$MODE" == "scan" ]; then
+        shadow_group_members=$(grep "^shadow:" /etc/group | cut -d: -f4)
+        if [ -n "$shadow_group_members" ]; then
+            log_fail "Shadow group is not empty: $shadow_group_members"
+            ((FAILED_CHECKS++))
+        else
+            log_pass "Shadow group is empty"
+            ((PASSED_CHECKS++))
+        fi
+    fi
+}
+
+# =========================
+# 7. Ensure No Duplicate UIDs
+# =========================
+check_duplicate_uids() {
+    ((TOTAL_CHECKS++))
+    if [ "$MODE" == "scan" ]; then
+        duplicate_uids=$(awk -F: '{print $3}' /etc/passwd | sort | uniq -d)
+        if [ -n "$duplicate_uids" ]; then
+            log_fail "Duplicate UIDs found: $duplicate_uids"
+            ((FAILED_CHECKS++))
+        else
+            log_pass "No duplicate UIDs found"
+            ((PASSED_CHECKS++))
+        fi
+    fi
+}
+
+# =========================
+# 8. Ensure No Duplicate GIDs
+# =========================
+check_duplicate_gids() {
+    ((TOTAL_CHECKS++))
+    if [ "$MODE" == "scan" ]; then
+        duplicate_gids=$(awk -F: '{print $3}' /etc/group | sort | uniq -d)
+        if [ -n "$duplicate_gids" ]; then
+            log_fail "Duplicate GIDs found: $duplicate_gids"
+            ((FAILED_CHECKS++))
+        else
+            log_pass "No duplicate GIDs found"
+            ((PASSED_CHECKS++))
+        fi
+    fi
+}
+
+# =========================
+# 9. Ensure No Duplicate User Names
+# =========================
+check_duplicate_usernames() {
+    ((TOTAL_CHECKS++))
+    if [ "$MODE" == "scan" ]; then
+        duplicate_usernames=$(awk -F: '{print $1}' /etc/passwd | sort | uniq -d)
+        if [ -n "$duplicate_usernames" ]; then
+            log_fail "Duplicate usernames found: $duplicate_usernames"
+            ((FAILED_CHECKS++))
+        else
+            log_pass "No duplicate usernames found"
+            ((PASSED_CHECKS++))
+        fi
+    fi
+}
+
+# =========================
+# 10. Ensure No Duplicate Group Names
+# =========================
+check_duplicate_group_names() {
+    ((TOTAL_CHECKS++))
+    if [ "$MODE" == "scan" ]; then
+        duplicate_group_names=$(awk -F: '{print $1}' /etc/group | sort | uniq -d)
+        if [ -n "$duplicate_group_names" ]; then
+            log_fail "Duplicate group names found: $duplicate_group_names"
+            ((FAILED_CHECKS++))
+        else
+            log_pass "No duplicate group names found"
+            ((PASSED_CHECKS++))
+        fi
+    fi
+}
+
+# =========================
+# 11. Ensure Local Interactive User Home Directories Are Configured
+# =========================
+check_local_interactive_user_home() {
+    ((TOTAL_CHECKS++))
+    if [ "$MODE" == "scan" ]; then
+        users_without_home=$(awk -F: '{ if ($7 != "/sbin/nologin" && $7 != "/bin/false") print $1 }' /etc/passwd | while read user; do 
+            if [ ! -d "/home/$user" ]; then 
+                echo "$user"; 
+            fi 
+        done)
+        if [ -n "$users_without_home" ]; then
+            log_fail "Users without home directories: $users_without_home"
+            ((FAILED_CHECKS++))
+        else
+            log_pass "All local interactive users have home directories"
+            ((PASSED_CHECKS++))
+        fi
+    fi
+}
+
+# =========================
+# 12. Ensure Local Interactive User Dot Files Access Is Configured
+# =========================
+check_local_interactive_user_dotfiles() {
+    ((TOTAL_CHECKS++))
+    if [ "$MODE" == "scan" ]; then
+        users_dotfiles=$(awk -F: '{ if ($7 != "/sbin/nologin" && $7 != "/bin/false") print $1 }' /etc/passwd | while read user; do
+            if [ -d "/home/$user" ]; then
+                dotfiles=$(ls -A /home/$user | grep -E '^\..*')
+                if [ -n "$dotfiles" ]; then
+                    echo "$user:$dotfiles"
+                fi
+            fi
+        done)
+        if [ -n "$users_dotfiles" ]; then
+            log_fail "Users with dot files in home directories: $users_dotfiles"
+            ((FAILED_CHECKS++))
+        else
+            log_pass "No dot files in local interactive users' home directories"
+            ((PASSED_CHECKS++))
+        fi
+    fi
+}
+
+# =========================
+# 13. Ensure /etc/passwd Uses Shadowed Passwords
+# =========================
 check_shadowed_passwords() {
     ((TOTAL_CHECKS++))
-    grep -E "^[^:]+:[^\!*]" /etc/passwd > /dev/null
-    if [ $? -eq 0 ]; then
-        log_pass "7.2.1: All accounts in /etc/passwd use shadowed passwords"
-    else
-        log_error "7.2.1: Some accounts in /etc/passwd do not have shadowed passwords"
-    fi
-}
-
-# ===================================================================
-# Additional User/Group Policies
-# ===================================================================
-
-# Ensure no duplicate UIDs, GIDs, or usernames
-check_unique_ids() {
-    ((TOTAL_CHECKS++))
-    duplicate_uids=$(awk -F: '{print $3}' /etc/passwd | sort | uniq -d)
-    duplicate_gids=$(awk -F: '{print $3}' /etc/group | sort | uniq -d)
-    duplicate_usernames=$(awk -F: '{print $1}' /etc/passwd | sort | uniq -d)
-    duplicate_groupnames=$(awk -F: '{print $1}' /etc/group | sort | uniq -d)
-
-    if [ -n "$duplicate_uids" ]; then
-        log_error "Duplicate UIDs found: $duplicate_uids"
-    else
-        log_pass "No duplicate UIDs found"
-    fi
-
-    if [ -n "$duplicate_gids" ]; then
-        log_error "Duplicate GIDs found: $duplicate_gids"
-    else
-        log_pass "No duplicate GIDs found"
-    fi
-
-    if [ -n "$duplicate_usernames" ]; then
-                log_error "Duplicate usernames found: $duplicate_usernames"
-    else
-        log_pass "No duplicate usernames found"
-    fi
-
-    if [ -n "$duplicate_groupnames" ]; then
-        log_error "Duplicate group names found: $duplicate_groupnames"
-    else
-        log_pass "No duplicate group names found"
-    fi
-}
-
-# Policy 7.2.2: Ensure local interactive user home directories are configured
-check_home_directories() {
-    ((TOTAL_CHECKS++))
-    local missing_home_dirs=false
-
-    while IFS=: read -r username _ _ _ _ home_dir _; do
-        if [ -n "$username" ] && [ -z "$home_dir" ]; then
-            missing_home_dirs=true
-            log_error "7.2.2: Missing home directory for user: $username"
+    if [ "$MODE" == "scan" ]; then
+        shadowed_passwords=$(grep -v '::' /etc/passwd | wc -l)
+        if [ "$shadowed_passwords" -gt 0 ]; then
+            log_fail "/etc/passwd contains accounts without shadowed passwords"
+            ((FAILED_CHECKS++))
+        else
+            log_pass "/etc/passwd uses shadowed passwords"
+            ((PASSED_CHECKS++))
         fi
-    done < /etc/passwd
-
-    if [ "$missing_home_dirs" = false ]; then
-        log_pass "7.2.2: All local interactive user home directories are configured"
     fi
 }
 
-# Policy 7.2.3: Ensure local interactive user dot files access is configured
-check_dot_files_access() {
+# =========================
+# 14. Ensure /etc/shadow Password Fields Are Not Empty
+# =========================
+check_shadow_password_fields() {
     ((TOTAL_CHECKS++))
-    local improper_access=false
-
-    # Check that local users' home directories have secure access for dot files (e.g., .bashrc, .profile)
-    find /home -type f -name ".*" -exec stat -c "%a %n" {} \; | while read perms file; do
-        if [ "${perms: -1}" != "0" ]; then
-            improper_access=true
-            log_error "7.2.3: Improper access permissions for dot file: $file (permissions: $perms)"
+    if [ "$MODE" == "scan" ]; then
+        empty_passwords=$(awk -F: '$2 == "" { print $1 }' /etc/shadow)
+        if [ -n "$empty_passwords" ]; then
+            log_fail "Empty password fields in /etc/shadow: $empty_passwords"
+            ((FAILED_CHECKS++))
+        else
+            log_pass "No empty password fields in /etc/shadow"
+            ((PASSED_CHECKS++))
         fi
-    done
-
-    if [ "$improper_access" = false ]; then
-        log_pass "7.2.3: All local interactive user dot files have secure access"
     fi
 }
 
-# ===================================================================
+# =========================
+# 15. Ensure No Duplicate User Names
+# =========================
+check_duplicate_usernames() {
+    ((TOTAL_CHECKS++))
+    if [ "$MODE" == "scan" ]; then
+        duplicate_usernames=$(awk -F: '{print $1}' /etc/passwd | sort | uniq -d)
+        if [ -n "$duplicate_usernames" ]; then
+            log_fail "Duplicate usernames found: $duplicate_usernames"
+            ((FAILED_CHECKS++))
+        else
+            log_pass "No duplicate usernames found"
+            ((PASSED_CHECKS++))
+        fi
+    fi
+}
+
+# =========================
+# 16. Ensure No Duplicate Group Names Exist
+# =========================
+check_duplicate_group_names() {
+    ((TOTAL_CHECKS++))
+    if [ "$MODE" == "scan" ]; then
+        duplicate_group_names=$(awk -F: '{print $1}' /etc/group | sort | uniq -d)
+        if [ -n "$duplicate_group_names" ]; then
+            log_fail "Duplicate group names found: $duplicate_group_names"
+            ((FAILED_CHECKS++))
+        else
+            log_pass "No duplicate group names found"
+            ((PASSED_CHECKS++))
+        fi
+    fi
+}
+
+# =========================
+# 17. Ensure Local Interactive Users' Home Directories Are Properly Configured
+# =========================
+check_local_interactive_users_home() {
+    ((TOTAL_CHECKS++))
+    if [ "$MODE" == "scan" ]; then
+        users_home=$(awk -F: '{ if ($7 != "/sbin/nologin" && $7 != "/bin/false") print $1 }' /etc/passwd | while read user; do 
+            if [ ! -d "/home/$user" ]; then
+                echo "$user"
+            fi
+        done)
+        if [ -n "$users_home" ]; then
+            log_fail "Local interactive users without home directories: $users_home"
+            ((FAILED_CHECKS++))
+        else
+            log_pass "All local interactive users have home directories"
+            ((PASSED_CHECKS++))
+        fi
+    fi
+}
+# =========================
+# 18. Ensure No Duplicate UIDs or GIDs
+# =========================
+check_duplicate_uids_and_gids() {
+    ((TOTAL_CHECKS++))
+    if [ "$MODE" == "scan" ]; then
+        duplicate_uids=$(awk -F: '{print $3}' /etc/passwd | sort | uniq -d)
+        duplicate_gids=$(awk -F: '{print $3}' /etc/group | sort | uniq -d)
+        if [ -n "$duplicate_uids" ] || [ -n "$duplicate_gids" ]; then
+            log_fail "Duplicate UIDs or GIDs found"
+            ((FAILED_CHECKS++))
+        else
+            log_pass "No duplicate UIDs or GIDs found"
+            ((PASSED_CHECKS++))
+        fi
+    fi
+}
+
+# =========================
+# 19. Ensure No Unauthorized Groups Exist
+# =========================
+check_unauthorized_groups() {
+    ((TOTAL_CHECKS++))
+    if [ "$MODE" == "scan" ]; then
+        unauthorized_groups=$(grep -E "^(root|adm|bin|sys|wheel)" /etc/group)
+        if [ -n "$unauthorized_groups" ]; then
+            log_fail "Unauthorized groups found: $unauthorized_groups"
+            ((FAILED_CHECKS++))
+        else
+            log_pass "No unauthorized groups found"
+            ((PASSED_CHECKS++))
+        fi
+    fi
+}
+
+# =========================
+# 20. Ensure Groups Have Correct Permissions
+# =========================
+check_groups_permissions() {
+    ((TOTAL_CHECKS++))
+    if [ "$MODE" == "scan" ]; then
+        incorrect_groups_permissions=$(find / -type d -name "group*" ! -perm 775)
+        if [ -n "$incorrect_groups_permissions" ]; then
+            log_fail "Groups with incorrect permissions found: $incorrect_groups_permissions"
+            ((FAILED_CHECKS++))
+        else
+            log_pass "All groups have correct permissions"
+            ((PASSED_CHECKS++))
+        fi
+    fi
+}
+
+# =========================
+# 21. Ensure No Non-Root User Has Admin Privileges
+# =========================
+check_non_root_admin_privileges() {
+    ((TOTAL_CHECKS++))
+    if [ "$MODE" == "scan" ]; then
+        non_root_admins=$(grep -E "^[^#].*sudo|wheel" /etc/group | grep -v "root")
+        if [ -n "$non_root_admins" ]; then
+            log_fail "Non-root users with admin privileges found: $non_root_admins"
+            ((FAILED_CHECKS++))
+        else
+            log_pass "No non-root users with admin privileges"
+            ((PASSED_CHECKS++))
+        fi
+    fi
+}
+
+# =========================
+# 22. Ensure Sudoers File is Configured Correctly
+# =========================
+check_sudoers_file() {
+    ((TOTAL_CHECKS++))
+    if [ "$MODE" == "scan" ]; then
+        sudoers_config=$(cat /etc/sudoers | grep -v "#")
+        if [ -n "$sudoers_config" ]; then
+            log_fail "Sudoers file contains potentially insecure configurations: $sudoers_config"
+            ((FAILED_CHECKS++))
+        else
+            log_pass "Sudoers file is configured correctly"
+            ((PASSED_CHECKS++))
+        fi
+    fi
+}
+
+# =========================
+# Print Summary
+# =========================
+print_summary() {
+    echo -e "\n==============================="
+    echo "Summary"
+    echo "==============================="
+    echo "Total Checks: $TOTAL_CHECKS"
+    echo "Passed: $PASSED_CHECKS"
+    echo "Failed: $FAILED_CHECKS"
+    echo "Fixed: $FIXED_CHECKS"
+    echo "==============================
+# =========================
+# Print Summary (continued)
+# =========================
+    echo -e "\n==============================="
+    echo "Summary"
+    echo "==============================="
+    echo "Total Checks: $TOTAL_CHECKS"
+    echo "Passed: $PASSED_CHECKS"
+    echo "Failed: $FAILED_CHECKS"
+    echo "Fixed: $FIXED_CHECKS"
+    echo "==============================="
+    if [ "$FAILED_CHECKS" -gt 0 ]; then
+        echo "[FAIL] Issues detected."
+    else
+        echo "[PASS] All checks passed."
+    fi
+}
+
+# =========================
 # Main Execution
-# ===================================================================
-echo "===== SYSTEM MAINTENANCE HARDENING - 23 POLICIES ====="
-echo "Mode: $MODE"
-echo "Log file: $LOG_FILE"
-echo ""
-
-# Clear previous log
-> "$LOG_FILE"
-
-# Policy i: Ensure permissions on /etc/passwd are configured
-check_permissions "/etc/passwd" "644" "root" "root" "i"
-
-# Policy ii: Ensure permissions on /etc/passwd- are configured
-check_permissions "/etc/passwd-" "600" "root" "root" "ii"
-
-# Policy iii: Ensure permissions on /etc/group are configured
-check_permissions "/etc/group" "644" "root" "root" "iii"
-
-# Policy iv: Ensure permissions on /etc/group- are configured
-check_permissions "/etc/group-" "600" "root" "root" "iv"
-
-# Policy v: Ensure permissions on /etc/shadow are configured
-check_permissions "/etc/shadow" "000" "root" "root" "v"
-
-# Policy vi: Ensure permissions on /etc/shadow- are configured
-check_permissions "/etc/shadow-" "000" "root" "root" "vi"
-
-# Policy vii: Ensure permissions on /etc/gshadow are configured
-check_permissions "/etc/gshadow" "000" "root" "root" "vii"
-
-# Policy viii: Ensure permissions on /etc/gshadow- are configured
-check_permissions "/etc/gshadow-" "000" "root" "root" "viii"
-
-# Policy ix: Ensure permissions on /etc/shells are configured
-check_permissions "/etc/shells" "644" "root" "root" "ix"
-
-# Policy x: Ensure permissions on /etc/security/opasswd are configured
-check_permissions "/etc/security/opasswd" "600" "root" "root" "x"
-
-# Policy xi: Ensure world writable files and directories are secured
-check_world_writable
-
-# Policy 7.2.1: Ensure accounts in /etc/passwd use shadowed passwords
-check_shadowed_passwords
-
-# Policy 7.2.2: Ensure local interactive user home directories are configured
-check_home_directories
-
-# Policy 7.2.3: Ensure local interactive user dot files access is configured
-check_dot_files_access
-
-# Policy xii: Ensure no files or directories without an owner and a group exist
-check_ownership() {
-    ((TOTAL_CHECKS++))
-    find / -nouser -o -nogroup -print0 | while IFS= read -r -d '' file; do
-        log_error "xii: File or directory without owner/group: $file"
-    done
-
-    log_pass "xii: All files and directories have owners and groups."
-}
-
-check_ownership
-
-# Policy xiii: Ensure SUID and SGID files are reviewed (Manual)
-log_manual "xiii: Review SUID and SGID files manually"
-# This requires manual review, so we just log it as a manual task
-
-# ===================================================================
-# Summary
-# ===================================================================
-echo ""
-echo "========================================================================"
-echo "Summary - 23 System Maintenance Policies"
-echo "========================================================================"
-echo "Total Checks: $TOTAL_CHECKS"
-echo "Passed: $PASSED_CHECKS"
-echo "Failed: $FAILED_CHECKS"
-echo "Fixed: $FIXED_CHECKS"
-echo "Manual: $MANUAL_CHECKS"
-echo "========================================================================"
-
-if [ "$FAILED_CHECKS" -gt 0 ]; then
-    echo -e "${RED}[FAIL] Some checks failed. See above for details.${NC}"
-    echo -e "${YELLOW}Check log file: $LOG_FILE${NC}"
+# =========================
+if [ "$MODE" != "scan" ] && [ "$MODE" != "fix" ] && [ "$MODE" != "rollback" ]; then
+    echo "Usage: sudo bash $0 <mode>"
+    echo "Mode should be one of: scan, fix, rollback"
     exit 1
-else
-    echo -e "${GREEN}[PASS] All automated checks passed or fixed.${NC}"
-    echo -e "${YELLOW}Remember to manually review SUID/SGID files (Policy xiii)${NC}"
-    echo -e "${YELLOW}Check log file: $LOG_FILE${NC}"
-    exit 0
 fi
 
+# Run checks and fixes based on mode
+check_and_fix_permissions
+check_world_writable_files
+check_no_owner_group
+check_suid_sgid_files
+check_groups_exist
+check_shadow_group_empty
+check_duplicate_uids
+check_duplicate_gids
+check_duplicate_usernames
+check_duplicate_group_names
+check_local_interactive_user_home
+check_local_interactive_user_dotfiles
+check_shadowed_passwords
+check_shadow_password_fields
+check_local_interactive_users_home
+check_duplicate_uids_and_gids
+check_unauthorized_groups
+check_groups_permissions
+check_non_root_admin_privileges
+check_sudoers_file
+
+# Print summary
+print_summary

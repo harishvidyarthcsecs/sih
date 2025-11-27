@@ -1,447 +1,843 @@
 #!/bin/bash
-# CIS-Style Logging and Auditing Hardening Script
-# Modes: scan | fix | rollback
+# Logging and Auditing Hardening Script
+# Covers: System Logging (journald, rsyslog), Auditd, AIDE
 
-# Default mode is "scan" if no mode is provided
 MODE="${1:-scan}"
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DB_PATH="$SCRIPT_DIR/../hardening.db"
+BACKUP_DIR="$SCRIPT_DIR/../backups/logging_auditing"
 TOPIC="Logging and Auditing"
 
-# Initialize counters
+mkdir -p "$BACKUP_DIR"
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
 TOTAL_CHECKS=0
 PASSED_CHECKS=0
 FAILED_CHECKS=0
 FIXED_CHECKS=0
 
-# Logging functions for output
-log_info() { echo -e "[INFO] $1"; }
-log_pass() { echo -e "[PASS] $1"; }
-log_fail() { echo -e "[FAIL] $1"; }
-log_warn() { echo -e "[WARN] $1"; }
+log_info() { echo -e "${GREEN}[INFO]${NC} $1"; }
+log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
+log_error() { echo -e "${RED}[FAIL]${NC} $1"; }
+log_pass() { echo -e "${GREEN}[PASS]${NC} $1"; }
 
-# =========================
-# Function Definitions for Policy Checks
-# =========================
-
-## 8a. System Logging
-### i. Configure systemd-journald service
-check_journald_service() {
-    ((TOTAL_CHECKS++))
-    echo -e "\nChecking: systemd-journald service"
-    if [ "$MODE" = "scan" ]; then
-        if systemctl is-active --quiet systemd-journald && systemctl is-enabled --quiet systemd-journald; then
-            log_pass "systemd-journald is enabled and active"
-            ((PASSED_CHECKS++))
-        else
-            log_fail "systemd-journald is not enabled or active"
-            ((FAILED_CHECKS++))
-        fi
-    fi
+save_config() {
+    python3 -c "
+import sqlite3
+conn = sqlite3.connect('$DB_PATH')
+cursor = conn.cursor()
+cursor.execute('''
+    INSERT OR REPLACE INTO configurations 
+    (topic, rule_id, rule_name, original_value, current_value, status)
+    VALUES (?, ?, ?, ?, ?, 'stored')
+''', ('$TOPIC', '$1', '''$2''', '''$3''', '''${4:-$3}'''))
+conn.commit()
+conn.close()
+"
 }
 
-check_journald_file_access() {
-    ((TOTAL_CHECKS++))
-    echo -e "\nChecking: journald log file access"
-    if [ "$MODE" = "scan" ]; then
-        if [ -r /var/log/journal ] && [ -w /var/log/journal ]; then
-            log_pass "Journald log file has appropriate access"
-            ((PASSED_CHECKS++))
-        else
-            log_fail "Journald log file access is misconfigured"
-            ((FAILED_CHECKS++))
-        fi
-    fi
+get_original_config() {
+    python3 -c "
+import sqlite3
+conn = sqlite3.connect('$DB_PATH')
+cursor = conn.cursor()
+cursor.execute('SELECT original_value FROM configurations WHERE topic=? AND rule_id=?', ('$TOPIC', '$1'))
+result = cursor.fetchone()
+conn.close()
+print(result[0] if result else '')
+"
 }
 
-check_journald_rotation() {
-    ((TOTAL_CHECKS++))
-    echo -e "\nChecking: journald log file rotation"
-    if [ "$MODE" = "scan" ]; then
-        if grep -q "^SystemMaxUse=" /etc/systemd/journald.conf; then
-            log_pass "Journald log rotation is configured"
-            ((PASSED_CHECKS++))
-        else
-            log_fail "Journald log rotation is not configured"
-            ((FAILED_CHECKS++))
-        fi
-    fi
-}
+# ============================================================================
+# 8.1 System Logging - journald
+# ============================================================================
 
-check_only_one_logging_system() {
+check_journald_enabled() {
+    local rule_id="LOG-JOURNALD-ENABLED"
+    local rule_name="Ensure journald service is enabled and active"
+    
     ((TOTAL_CHECKS++))
-    echo -e "\nChecking: Only one logging system is in use"
+    echo ""
+    echo "Checking: $rule_name"
+    echo "Rule ID: $rule_id"
+    
     if [ "$MODE" = "scan" ]; then
-        if [ -f /etc/rsyslog.conf ]; then
-            log_fail "Both journald and rsyslog are being used"
-            ((FAILED_CHECKS++))
-        else
-            log_pass "Only systemd-journald is in use"
+        if systemctl is-active systemd-journald 2>/dev/null | grep -q "active"; then
+            log_pass "journald is active"
             ((PASSED_CHECKS++))
-        fi
-    fi
-}
-
-### ii. Configure rsyslog
-check_rsyslog_installed() {
-    ((TOTAL_CHECKS++))
-    echo -e "\nChecking: rsyslog installation"
-    if [ "$MODE" = "scan" ]; then
-        if dpkg -l | grep -q "^ii  rsyslog"; then
-            log_pass "rsyslog is installed"
-            ((PASSED_CHECKS++))
+            return 0
         else
-            log_fail "rsyslog is not installed"
+            log_error "journald is not active"
             ((FAILED_CHECKS++))
+            return 1
         fi
+        
     elif [ "$MODE" = "fix" ]; then
-        apt install -y rsyslog
-        log_info "rsyslog installed"
+        save_config "$rule_id" "$rule_name" "inactive"
+        systemctl enable systemd-journald
+        systemctl start systemd-journald
+        log_info "Enabled and started journald"
         ((FIXED_CHECKS++))
+        
+    elif [ "$MODE" = "rollback" ]; then
+        log_info "journald is a core system service - no rollback"
     fi
 }
+
+check_journald_compression() {
+    local rule_id="LOG-JOURNALD-COMPRESS"
+    local rule_name="Ensure journald log file rotation is configured"
+    
+    ((TOTAL_CHECKS++))
+    echo ""
+    echo "Checking: $rule_name"
+    echo "Rule ID: $rule_id"
+    
+    if [ "$MODE" = "scan" ]; then
+        if [ -f /etc/systemd/journald.conf ]; then
+            local compress=$(grep "^Compress=" /etc/systemd/journald.conf | cut -d= -f2)
+            local max_file_sec=$(grep "^MaxFileSec=" /etc/systemd/journald.conf | cut -d= -f2)
+            
+            if [ "$compress" = "yes" ] || [ -n "$max_file_sec" ]; then
+                log_pass "journald rotation is configured"
+                ((PASSED_CHECKS++))
+                return 0
+            else
+                log_error "journald rotation not configured"
+                ((FAILED_CHECKS++))
+                return 1
+            fi
+        fi
+        
+    elif [ "$MODE" = "fix" ]; then
+        if [ -f /etc/systemd/journald.conf ]; then
+            cp /etc/systemd/journald.conf "$BACKUP_DIR/journald.conf.$(date +%Y%m%d_%H%M%S)"
+            save_config "$rule_id" "$rule_name" "not_configured"
+            
+            sed -i 's/^#Compress=.*/Compress=yes/' /etc/systemd/journald.conf
+            sed -i 's/^#SystemMaxUse=.*/SystemMaxUse=1G/' /etc/systemd/journald.conf
+            sed -i 's/^#MaxFileSec=.*/MaxFileSec=1month/' /etc/systemd/journald.conf
+            
+            systemctl restart systemd-journald
+            log_info "Configured journald rotation"
+            ((FIXED_CHECKS++))
+        fi
+        
+    elif [ "$MODE" = "rollback" ]; then
+        local backup=$(ls -t "$BACKUP_DIR"/journald.conf.* 2>/dev/null | head -1)
+        if [ -n "$backup" ]; then
+            cp "$backup" /etc/systemd/journald.conf
+            systemctl restart systemd-journald
+            log_info "Restored journald configuration"
+        fi
+    fi
+}
+
+# ============================================================================
+# 8.2 System Logging - rsyslog
+# ============================================================================
 
 check_rsyslog_enabled() {
+    local rule_id="LOG-RSYSLOG-ENABLED"
+    local rule_name="Ensure rsyslog service is enabled and active"
+    
     ((TOTAL_CHECKS++))
-    echo -e "\nChecking: rsyslog service"
+    echo ""
+    echo "Checking: $rule_name"
+    echo "Rule ID: $rule_id"
+    
     if [ "$MODE" = "scan" ]; then
-        if systemctl is-active --quiet rsyslog && systemctl is-enabled --quiet rsyslog; then
+        # Check if service is masked first
+        if systemctl is-enabled rsyslog 2>&1 | grep -q "masked"; then
+            log_error "rsyslog service is masked (disabled by system)"
+            ((FAILED_CHECKS++))
+            return 1
+        fi
+        
+        if systemctl is-enabled rsyslog 2>/dev/null | grep -q "enabled" && \
+           systemctl is-active rsyslog 2>/dev/null | grep -q "active"; then
             log_pass "rsyslog is enabled and active"
             ((PASSED_CHECKS++))
+            return 0
         else
-            log_fail "rsyslog is not enabled or active"
+            local enabled_status=$(systemctl is-enabled rsyslog 2>&1)
+            local active_status=$(systemctl is-active rsyslog 2>&1)
+            log_error "rsyslog service not properly configured (enabled: $enabled_status, active: $active_status)"
             ((FAILED_CHECKS++))
+            return 1
         fi
+        
     elif [ "$MODE" = "fix" ]; then
-        systemctl enable rsyslog
-        systemctl start rsyslog
-        log_info "rsyslog enabled and started"
+        local service_status=$(systemctl is-enabled rsyslog 2>&1)
+        local was_masked=false
+        local was_disabled=false
+        
+        # Check if service is masked
+        if echo "$service_status" | grep -q "masked"; then
+            log_warn "rsyslog service is masked - this typically means systemd-journald is preferred"
+            log_manual "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            log_manual "CONFLICT DETECTED: rsyslog is masked by systemd"
+            log_manual "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            log_manual "Your system is using systemd-journald for logging."
+            log_manual "Both rsyslog and systemd-journald provide logging services."
+            log_manual ""
+            log_manual "WHY IS THIS MASKED?"
+            log_manual "- systemd masked rsyslog to prevent conflicts"
+            log_manual "- Only ONE logging daemon should run at a time"
+            log_manual "- Modern systems prefer systemd-journald"
+            log_manual ""
+            log_manual "OPTIONS:"
+            log_manual "1. Keep systemd-journald (RECOMMENDED for modern systems)"
+            log_manual "   - No action needed"
+            log_manual "   - Complies with audit requirements via journald"
+            log_manual ""
+            log_manual "2. Switch to rsyslog (if specifically required)"
+            log_manual "   Run these commands manually:"
+            log_manual "   sudo systemctl unmask rsyslog"
+            log_manual "   sudo systemctl stop systemd-journald"
+            log_manual "   sudo systemctl disable systemd-journald"
+            log_manual "   sudo systemctl enable rsyslog"
+            log_manual "   sudo systemctl start rsyslog"
+            log_manual ""
+            log_manual "3. Use both (dual logging - uses more disk space)"
+            log_manual "   sudo systemctl unmask rsyslog"
+            log_manual "   sudo systemctl enable rsyslog"
+            log_manual "   sudo systemctl start rsyslog"
+            log_manual "   Configure journald to forward to rsyslog:"
+            log_manual "   echo 'ForwardToSyslog=yes' >> /etc/systemd/journald.conf"
+            log_manual "   sudo systemctl restart systemd-journald"
+            log_manual "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            ((MANUAL_CHECKS++))
+            was_masked=true
+            save_config "$rule_id" "$rule_name" "masked"
+            return 2
+        fi
+        
+        # Service is not masked - safe to enable
+        save_config "$rule_id" "$rule_name" "$service_status"
+        
+        # Check if already enabled and active
+        if systemctl is-enabled rsyslog 2>/dev/null | grep -q "enabled" && \
+           systemctl is-active rsyslog 2>/dev/null | grep -q "active"; then
+            log_info "rsyslog is already enabled and active"
+            return 0
+        fi
+        
+        # Enable the service
+        if ! systemctl is-enabled rsyslog 2>/dev/null | grep -q "enabled"; then
+            log_info "Enabling rsyslog service..."
+            if systemctl enable rsyslog 2>&1 | tee /tmp/rsyslog_enable.log; then
+                log_pass "rsyslog service enabled"
+            else
+                log_error "Failed to enable rsyslog - check /tmp/rsyslog_enable.log"
+                return 1
+            fi
+        fi
+        
+        # Start the service
+        if ! systemctl is-active rsyslog 2>/dev/null | grep -q "active"; then
+            log_info "Starting rsyslog service..."
+            if systemctl start rsyslog 2>&1 | tee /tmp/rsyslog_start.log; then
+                log_pass "rsyslog service started"
+                ((FIXED_CHECKS++))
+            else
+                log_error "Failed to start rsyslog - check /tmp/rsyslog_start.log"
+                log_error "Check status with: systemctl status rsyslog"
+                return 1
+            fi
+        fi
+        
+    elif [ "$MODE" = "rollback" ]; then
+        local original=$(get_original_config "$rule_id")
+        
+        if [ "$original" = "masked" ]; then
+            log_info "Service was originally masked - not rolling back"
+            return 0
+        fi
+        
+        log_info "Disabling rsyslog service..."
+        systemctl disable rsyslog 2>/dev/null
+        systemctl stop rsyslog 2>/dev/null
+        log_info "Disabled and stopped rsyslog"
+    fi
+}
+
+# ============================================================================
+# Safe rsyslog File Permissions Configuration
+# ============================================================================
+
+check_rsyslog_file_permissions() {
+    local rule_id="LOG-RSYSLOG-PERMS"
+    local rule_name="Ensure rsyslog log file creation mode is configured"
+    
+    ((TOTAL_CHECKS++))
+    echo ""
+    echo "Checking: $rule_name"
+    echo "Rule ID: $rule_id"
+    
+    if [ "$MODE" = "scan" ]; then
+        # Check both rsyslog.conf and drop-in files
+        if grep -q '^\$FileCreateMode 0640' /etc/rsyslog.conf 2>/dev/null || \
+           grep -rq '^\$FileCreateMode 0640' /etc/rsyslog.d/ 2>/dev/null; then
+            log_pass "rsyslog file creation mode is configured (0640)"
+            ((PASSED_CHECKS++))
+            return 0
+        else
+            log_error "rsyslog file creation mode is not configured"
+            ((FAILED_CHECKS++))
+            return 1
+        fi
+        
+    elif [ "$MODE" = "fix" ]; then
+        # Check if rsyslog is installed first
+        if ! command -v rsyslogd &> /dev/null; then
+            log_warn "rsyslog is not installed - cannot configure file permissions"
+            ((MANUAL_CHECKS++))
+            return 2
+        fi
+        
+        # Check if rsyslog.conf exists
+        if [ ! -f /etc/rsyslog.conf ]; then
+            log_error "rsyslog.conf not found - rsyslog may not be properly installed"
+            return 1
+        fi
+        
+        # Create backup
+        local backup_file="$BACKUP_DIR/rsyslog.conf.$(date +%Y%m%d_%H%M%S)"
+        if cp /etc/rsyslog.conf "$backup_file" 2>/dev/null; then
+            log_info "Created backup: $backup_file"
+        else
+            log_error "Failed to create backup of rsyslog.conf"
+            return 1
+        fi
+        
+        # Get current configuration
+        local current_config=""
+        if grep -q '^\$FileCreateMode' /etc/rsyslog.conf; then
+            current_config=$(grep '^\$FileCreateMode' /etc/rsyslog.conf | head -1)
+        else
+            current_config="not_set"
+        fi
+        save_config "$rule_id" "$rule_name" "$current_config"
+        
+        # Apply configuration
+        if grep -q '^\$FileCreateMode' /etc/rsyslog.conf; then
+            # Setting exists - update it
+            log_info "Updating existing FileCreateMode setting..."
+            sed -i 's/^\$FileCreateMode.*/$FileCreateMode 0640/' /etc/rsyslog.conf
+        else
+            # Setting doesn't exist - add it
+            log_info "Adding FileCreateMode setting..."
+            
+            # Find a good place to add it (after global directives, before rules)
+            if grep -q '^#### GLOBAL DIRECTIVES' /etc/rsyslog.conf; then
+                # Add after global directives section
+                sed -i '/^#### GLOBAL DIRECTIVES/a\
+\
+# Set default permissions for log files\
+$FileCreateMode 0640' /etc/rsyslog.conf
+            else
+                # Add at the beginning after comments
+                sed -i '1a\
+\
+# Set default permissions for log files\
+$FileCreateMode 0640' /etc/rsyslog.conf
+            fi
+        fi
+        
+        # Validate configuration
+        log_info "Validating rsyslog configuration..."
+        if rsyslogd -N1 &>/dev/null; then
+            log_pass "rsyslog configuration is valid"
+        else
+            log_error "rsyslog configuration validation failed"
+            log_error "Restoring backup..."
+            cp "$backup_file" /etc/rsyslog.conf
+            return 1
+        fi
+        
+        # Restart rsyslog to apply changes
+        log_info "Restarting rsyslog service..."
+        if systemctl restart rsyslog 2>&1 | tee /tmp/rsyslog_restart.log; then
+            log_pass "rsyslog restarted successfully"
+            ((FIXED_CHECKS++))
+            
+            # Verify service is running
+            sleep 1
+            if systemctl is-active rsyslog 2>/dev/null | grep -q "active"; then
+                log_pass "rsyslog is active and running"
+            else
+                log_error "rsyslog failed to start after restart"
+                log_error "Check logs: journalctl -u rsyslog -n 50"
+                return 1
+            fi
+        else
+            log_error "Failed to restart rsyslog"
+            log_error "Check /tmp/rsyslog_restart.log for details"
+            log_error "Restoring backup configuration..."
+            cp "$backup_file" /etc/rsyslog.conf
+            systemctl restart rsyslog
+            return 1
+        fi
+        
+    elif [ "$MODE" = "rollback" ]; then
+        local backup=$(ls -t "$BACKUP_DIR"/rsyslog.conf.* 2>/dev/null | head -1)
+        if [ -n "$backup" ]; then
+            log_info "Restoring rsyslog configuration from: $backup"
+            if cp "$backup" /etc/rsyslog.conf; then
+                log_info "Configuration restored"
+                
+                # Validate before restarting
+                if rsyslogd -N1 &>/dev/null; then
+                    systemctl restart rsyslog
+                    log_info "rsyslog restarted with original configuration"
+                else
+                    log_error "Restored configuration is invalid"
+                fi
+            else
+                log_error "Failed to restore backup"
+            fi
+        else
+            log_warn "No backup found to restore"
+        fi
+    fi
+}
+
+
+check_logrotate() {
+    local rule_id="LOG-LOGROTATE"
+    local rule_name="Ensure logrotate is configured"
+    
+    ((TOTAL_CHECKS++))
+    echo ""
+    echo "Checking: $rule_name"
+    echo "Rule ID: $rule_id"
+    
+    if [ "$MODE" = "scan" ]; then
+        if [ -f /etc/logrotate.conf ] && [ -d /etc/logrotate.d ]; then
+            log_pass "logrotate is configured"
+            ((PASSED_CHECKS++))
+            return 0
+        else
+            log_error "logrotate is not properly configured"
+            ((FAILED_CHECKS++))
+            return 1
+        fi
+        
+    elif [ "$MODE" = "fix" ]; then
+        if ! command -v logrotate >/dev/null; then
+            apt-get install -y logrotate
+            log_info "Installed logrotate"
+            ((FIXED_CHECKS++))
+        fi
+        
+    elif [ "$MODE" = "rollback" ]; then
+        log_info "logrotate configuration maintained"
+    fi
+}
+
+check_logfile_permissions() {
+    local rule_id="LOG-FILE-PERMS"
+    local rule_name="Ensure access to all logfiles has been configured"
+    
+    ((TOTAL_CHECKS++))
+    echo ""
+    echo "Checking: $rule_name"
+    echo "Rule ID: $rule_id"
+    
+    if [ "$MODE" = "scan" ]; then
+        local bad_perms=$(find /var/log -type f -perm /027 2>/dev/null | wc -l)
+        
+        if [ "$bad_perms" -eq 0 ]; then
+            log_pass "Log file permissions are correct"
+            ((PASSED_CHECKS++))
+            return 0
+        else
+            log_error "Found $bad_perms log files with incorrect permissions"
+            ((FAILED_CHECKS++))
+            return 1
+        fi
+        
+    elif [ "$MODE" = "fix" ]; then
+        save_config "$rule_id" "$rule_name" "permissions_mixed"
+        
+        find /var/log -type f -exec chmod g-wx,o-rwx {} \;
+        log_info "Fixed log file permissions"
         ((FIXED_CHECKS++))
+        
+    elif [ "$MODE" = "rollback" ]; then
+        log_warn "Log file permission rollback not recommended"
     fi
 }
 
-check_journald_to_rsyslog() {
-    ((TOTAL_CHECKS++))
-    echo -e "\nChecking: journald sends logs to rsyslog"
-    if [ "$MODE" = "scan" ]; then
-        if grep -q "^ForwardToSyslog=" /etc/systemd/journald.conf && grep -q "^ForwardToSyslog=yes" /etc/systemd/journald.conf; then
-            log_pass "journald configured to forward logs to rsyslog"
-            ((PASSED_CHECKS++))
-        else
-            log_fail "journald not forwarding logs to rsyslog"
-            ((FAILED_CHECKS++))
-        fi
-    fi
-}
+# ============================================================================
+# 8.3 System Auditing - auditd
+# ============================================================================
 
-check_rsyslog_file_creation_mode() {
-    ((TOTAL_CHECKS++))
-    echo -e "\nChecking: rsyslog log file creation mode"
-    if [ "$MODE" = "scan" ]; then
-        if grep -q "^CreateDirMode" /etc/rsyslog.conf; then
-            log_pass "rsyslog log file creation mode is configured"
-            ((PASSED_CHECKS++))
-        else
-            log_fail "rsyslog log file creation mode is not configured"
-            ((FAILED_CHECKS++))
-        fi
-    fi
-}
-
-check_rsyslog_remote_logging() {
-    ((TOTAL_CHECKS++))
-    echo -e "\nChecking: rsyslog configured to send logs to a remote host"
-    if [ "$MODE" = "scan" ]; then
-        if grep -q "^*.* @@<remote_log_host>" /etc/rsyslog.conf; then
-            log_pass "rsyslog configured to send logs to remote log host"
-            ((PASSED_CHECKS++))
-        else
-            log_fail "rsyslog not configured to send logs to remote log host"
-            ((FAILED_CHECKS++))
-        fi
-    fi
-}
-
-check_rsyslog_no_receive_from_remote() {
-    ((TOTAL_CHECKS++))
-    echo -e "\nChecking: rsyslog not configured to receive logs from remote clients"
-    if [ "$MODE" = "scan" ]; then
-        if ! grep -q "^$ModLoad imtcp.so" /etc/rsyslog.conf && ! grep -q "^$InputTCPServerRun" /etc/rsyslog.conf; then
-            log_pass "rsyslog not configured to receive logs from remote clients"
-            ((PASSED_CHECKS++))
-        else
-            log_fail "rsyslog configured to receive logs from remote clients"
-            ((FAILED_CHECKS++))
-        fi
-    fi
-}
-
-check_logrotate_configured() {
-    ((TOTAL_CHECKS++))
-    echo -e "\nChecking: logrotate configured"
-    if [ "$MODE" = "scan" ]; then
-        if dpkg -l | grep -q "^ii  logrotate"; then
-            log_pass "logrotate is installed and configured"
-            ((PASSED_CHECKS++))
-        else
-            log_fail "logrotate is not installed or configured"
-            ((FAILED_CHECKS++))
-        fi
-    fi
-}
-
-### iii. Configure Logfiles
-check_logfile_access() {
-    ((TOTAL_CHECKS++))
-    echo -e "\nChecking: access to all logfiles"
-    if [ "$MODE" = "scan" ]; then
-        if find /var/log -type f -exec stat {} \; | grep -E "Access: .* rw" > /dev/null; then
-            log_pass "Access to logfiles is configured"
-            ((PASSED_CHECKS++))
-        else
-            log_fail "Logfiles access is not configured"
-            ((FAILED_CHECKS++))
-        fi
-    fi
-}
-
-## 8b. System Auditing
 check_auditd_installed() {
+    local rule_id="AUD-AUDITD-INSTALLED"
+    local rule_name="Ensure auditd packages are installed"
+    
     ((TOTAL_CHECKS++))
-    echo -e "\nChecking: auditd installation"
+    echo ""
+    echo "Checking: $rule_name"
+    echo "Rule ID: $rule_id"
+    
     if [ "$MODE" = "scan" ]; then
-        if dpkg -l | grep -q "^ii  auditd"; then
+        if dpkg -l | grep -q "^ii.*auditd"; then
             log_pass "auditd is installed"
             ((PASSED_CHECKS++))
+            return 0
         else
-            log_fail "auditd is not installed"
+            log_error "auditd is not installed"
             ((FAILED_CHECKS++))
+            return 1
         fi
+        
     elif [ "$MODE" = "fix" ]; then
-        apt install -y auditd
-        log_info "auditd installed"
-        ((FIXED_CHECKS++))
+        if ! dpkg -l | grep -q "^ii.*auditd"; then
+            save_config "$rule_id" "$rule_name" "not_installed"
+            apt-get install -y auditd audispd-plugins
+            log_info "Installed auditd"
+            ((FIXED_CHECKS++))
+        fi
+        
+    elif [ "$MODE" = "rollback" ]; then
+        local original=$(get_original_config "$rule_id")
+        if [ "$original" = "not_installed" ]; then
+            apt-get remove -y auditd audispd-plugins
+            log_info "Removed auditd"
+        fi
     fi
 }
 
-check_auditd_service() {
+check_auditd_enabled() {
+    local rule_id="AUD-AUDITD-ENABLED"
+    local rule_name="Ensure auditd service is enabled and active"
+    
     ((TOTAL_CHECKS++))
-    echo -e "\nChecking: auditd service"
+    echo ""
+    echo "Checking: $rule_name"
+    echo "Rule ID: $rule_id"
+    
     if [ "$MODE" = "scan" ]; then
-        if systemctl is-active --quiet auditd && systemctl is-enabled --quiet auditd; then
+        if systemctl is-enabled auditd 2>/dev/null | grep -q "enabled" && \
+           systemctl is-active auditd 2>/dev/null | grep -q "active"; then
             log_pass "auditd is enabled and active"
             ((PASSED_CHECKS++))
+            return 0
         else
-            log_fail "auditd is not enabled or active"
+            log_error "auditd is not properly configured"
             ((FAILED_CHECKS++))
+            return 1
         fi
+        
     elif [ "$MODE" = "fix" ]; then
+        save_config "$rule_id" "$rule_name" "not_enabled"
         systemctl enable auditd
         systemctl start auditd
-        log_info "auditd enabled and started"
+        log_info "Enabled and started auditd"
         ((FIXED_CHECKS++))
+        
+    elif [ "$MODE" = "rollback" ]; then
+        systemctl disable auditd 2>/dev/null
+        systemctl stop auditd 2>/dev/null
+        log_info "Disabled auditd"
     fi
 }
 
-check_auditd_processes() {
+check_audit_log_storage() {
+    local rule_id="AUD-LOG-STORAGE"
+    local rule_name="Ensure audit log storage size is configured"
+    
     ((TOTAL_CHECKS++))
-    echo -e "\nChecking: Auditing for processes that start prior to auditd"
+    echo ""
+    echo "Checking: $rule_name"
+    echo "Rule ID: $rule_id"
+    
     if [ "$MODE" = "scan" ]; then
-        if grep -q "^AUDIT_BACKLOG_LIMIT=" /etc/audit/auditd.conf; then
-            log_pass "Auditing for processes before auditd is enabled"
-            ((PASSED_CHECKS++))
-        else
-            log_fail "Audit backlog limit is not configured"
-            ((FAILED_CHECKS++))
-        fi
-    fi
-}
-
-check_auditd_backlog_limit() {
-    ((TOTAL_CHECKS++))
-    echo -e "\nChecking: auditd backlog limit"
-    if [ "$MODE" = "scan" ]; then
-        if grep -q "^audit_backlog_limit" /etc/audit/auditd.conf; then
-            log_pass "Audit backlog limit is configured"
-            ((PASSED_CHECKS++))
-        else
-            log_fail "Audit backlog limit is not configured"
-            ((FAILED_CHECKS++))
-        fi
-    fi
-}
-
-## 8c. Configure Data Retention
-check_audit_log_storage_size() {
-    ((TOTAL_CHECKS++))
-    echo -e "\nChecking: Audit log storage size configuration"
-    if [ "$MODE" = "scan" ]; then
-        if grep -q "^max_log_file" /etc/audit/auditd.conf; then
-            log_pass "Audit log storage size is configured"
-            ((PASSED_CHECKS++))
-        else
-            log_fail "Audit log storage size is not configured"
-            ((FAILED_CHECKS++))
-        fi
-    fi
-}
-
-check_audit_log_auto_deletion() {
-    ((TOTAL_CHECKS++))
-    echo -e "\nChecking: Audit logs auto-deletion configuration"
-    if [ "$MODE" = "scan" ]; then
-        if ! grep -q "^delete_logs" /etc/audit/auditd.conf; then
-            log_pass "Audit logs are not configured to delete automatically"
-            ((PASSED_CHECKS++))
-        else
-            log_fail "Audit logs are configured to delete automatically"
-            ((FAILED_CHECKS++))
-        fi
-    fi
-}
-
-check_audit_log_full() {
-    ((TOTAL_CHECKS++))
-    echo -e "\nChecking: System disabled when audit logs are full"
-    if [ "$MODE" = "scan" ]; then
-        if grep -q "^max_log_file_action=ignore" /etc/audit/auditd.conf; then
-            log_pass "System is disabled when audit logs are full"
-            ((PASSED_CHECKS++))
-        else
-            log_fail "Audit log full action is not configured correctly"
-            ((FAILED_CHECKS++))
-        fi
-    fi
-}
-
-check_audit_log_warning() {
-    ((TOTAL_CHECKS++))
-    echo -e "\nChecking: System warns when audit logs are low on space"
-    if [ "$MODE" = "scan" ]; then
-        if grep -q "^space_left_action=syslog" /etc/audit/auditd.conf; then
-            log_pass "System warns when audit logs are low on space"
-            ((PASSED_CHECKS++))
-        else
-            log_fail "Audit log low space warning is not configured"
-            ((FAILED_CHECKS++))
-        fi
-    fi
-}
-
-## 8d. Configure auditd Rules
-check_auditd_rules() {
-    ((TOTAL_CHECKS++))
-    echo -e "\nChecking: auditd rules configuration"
-    if [ "$MODE" = "scan" ]; then
-        for rule in $(cat /etc/audit/rules.d/*.rules); do
-            if [[ "$rule" =~ "sudoers" ]] || [[ "$rule" =~ "date" ]] || [[ "$rule" =~ "usermod" ]] || [[ "$rule" =~ "setfacl" ]]; then
-                log_pass "Audit rule: $rule"
+        if [ -f /etc/audit/auditd.conf ]; then
+            local max_log_file=$(grep "^max_log_file " /etc/audit/auditd.conf | awk '{print $3}')
+            
+            if [ -n "$max_log_file" ] && [ "$max_log_file" -ge 8 ]; then
+                log_pass "Audit log storage configured: ${max_log_file}MB"
                 ((PASSED_CHECKS++))
+                return 0
             else
-                log_fail "Missing audit rule: $rule"
+                log_error "Audit log storage not properly configured"
                 ((FAILED_CHECKS++))
+                return 1
             fi
-        done
-    fi
-}
-
-## 8e. Configure auditd File Access
-check_audit_log_files_permissions() {
-    ((TOTAL_CHECKS++))
-    echo -e "\nChecking: audit log file permissions"
-    if [ "$MODE" = "scan" ]; then
-        if find /var/log/audit -type f -exec stat {} \; | grep -E "Access: .* rw" > /dev/null; then
-            log_pass "Audit log file permissions are correct"
-            ((PASSED_CHECKS++))
-        else
-            log_fail "Audit log file permissions are incorrect"
-            ((FAILED_CHECKS++))
+        fi
+        
+    elif [ "$MODE" = "fix" ]; then
+        if [ -f /etc/audit/auditd.conf ]; then
+            cp /etc/audit/auditd.conf "$BACKUP_DIR/auditd.conf.$(date +%Y%m%d_%H%M%S)"
+            save_config "$rule_id" "$rule_name" "not_configured"
+            
+            sed -i 's/^max_log_file .*/max_log_file = 10/' /etc/audit/auditd.conf
+            sed -i 's/^max_log_file_action .*/max_log_file_action = keep_logs/' /etc/audit/auditd.conf
+            
+            service auditd restart
+            log_info "Configured audit log storage"
+            ((FIXED_CHECKS++))
+        fi
+        
+    elif [ "$MODE" = "rollback" ]; then
+        local backup=$(ls -t "$BACKUP_DIR"/auditd.conf.* 2>/dev/null | head -1)
+        if [ -n "$backup" ]; then
+            cp "$backup" /etc/audit/auditd.conf
+            service auditd restart
+            log_info "Restored auditd configuration"
         fi
     fi
 }
 
-check_audit_config_permissions() {
-    ((TOTAL_CHECKS++))
-    echo -e "\nChecking: audit configuration file permissions"
-    if [ "$MODE" = "scan" ]; then
-        if find /etc/audit -type f -exec stat {} \; | grep -E "Access: .* rw" > /dev/null; then
-            log_pass "Audit configuration file permissions are correct"
-            ((PASSED_CHECKS++))
-        else
-            log_fail "Audit configuration file permissions are incorrect"
-            ((FAILED_CHECKS++))
-        fi
+add_audit_rule() {
+    local rule="$1"
+    local description="$2"
+    local rule_id="$3"
+    
+    if ! grep -q "$rule" /etc/audit/rules.d/hardening.rules 2>/dev/null; then
+        echo "# $description" >> /etc/audit/rules.d/hardening.rules
+        echo "$rule" >> /etc/audit/rules.d/hardening.rules
+        echo "" >> /etc/audit/rules.d/hardening.rules
     fi
 }
 
-## 8f. Configure Integrity Checking (AIDE)
+check_audit_rules() {
+    local rule_id="AUD-RULES"
+    local rule_name="Ensure audit rules are configured"
+    
+    ((TOTAL_CHECKS++))
+    echo ""
+    echo "Checking: $rule_name"
+    echo "Rule ID: $rule_id"
+    
+    if [ "$MODE" = "scan" ]; then
+        if [ -f /etc/audit/rules.d/hardening.rules ]; then
+            log_pass "Custom audit rules are configured"
+            ((PASSED_CHECKS++))
+            return 0
+        else
+            log_error "Custom audit rules not configured"
+            ((FAILED_CHECKS++))
+            return 1
+        fi
+        
+    elif [ "$MODE" = "fix" ]; then
+        save_config "$rule_id" "$rule_name" "not_configured"
+        
+        # Create hardening rules file
+        cat > /etc/audit/rules.d/hardening.rules << 'EOF'
+# Audit Rules for System Hardening
+
+# Time changes
+-a always,exit -F arch=b64 -S adjtimex -S settimeofday -k time-change
+-a always,exit -F arch=b64 -S clock_settime -k time-change
+-w /etc/localtime -p wa -k time-change
+
+# User/Group changes
+-w /etc/group -p wa -k identity
+-w /etc/passwd -p wa -k identity
+-w /etc/gshadow -p wa -k identity
+-w /etc/shadow -p wa -k identity
+-w /etc/security/opasswd -p wa -k identity
+
+# Network changes
+-a always,exit -F arch=b64 -S sethostname -S setdomainname -k system-locale
+-w /etc/issue -p wa -k system-locale
+-w /etc/issue.net -p wa -k system-locale
+-w /etc/hosts -p wa -k system-locale
+-w /etc/network -p wa -k system-locale
+
+# Login/Logout events
+-w /var/log/faillog -p wa -k logins
+-w /var/log/lastlog -p wa -k logins
+-w /var/log/tallylog -p wa -k logins
+
+# Session initiation
+-w /var/run/utmp -p wa -k session
+-w /var/log/wtmp -p wa -k logins
+-w /var/log/btmp -p wa -k logins
+
+# Sudoers changes
+-w /etc/sudoers -p wa -k scope
+-w /etc/sudoers.d/ -p wa -k scope
+
+# Kernel module changes
+-w /sbin/insmod -p x -k modules
+-w /sbin/rmmod -p x -k modules
+-w /sbin/modprobe -p x -k modules
+-a always,exit -F arch=b64 -S init_module -S delete_module -k modules
+
+EOF
+        
+        # Load rules
+        augenrules --load
+        log_info "Configured audit rules"
+        ((FIXED_CHECKS++))
+        
+    elif [ "$MODE" = "rollback" ]; then
+        rm -f /etc/audit/rules.d/hardening.rules
+        augenrules --load
+        log_info "Removed custom audit rules"
+    fi
+}
+
+# ============================================================================
+# 8.4 Integrity Checking - AIDE
+# ============================================================================
+
 check_aide_installed() {
+    local rule_id="AUD-AIDE-INSTALLED"
+    local rule_name="Ensure AIDE is installed"
+    
     ((TOTAL_CHECKS++))
-    echo -e "\nChecking: AIDE installation"
+    echo ""
+    echo "Checking: $rule_name"
+    echo "Rule ID: $rule_id"
+    
     if [ "$MODE" = "scan" ]; then
-        if dpkg -l | grep -q "^ii  aide"; then
+        if command -v aide >/dev/null 2>&1; then
             log_pass "AIDE is installed"
             ((PASSED_CHECKS++))
+            return 0
         else
-            log_fail "AIDE is not installed"
+            log_error "AIDE is not installed"
             ((FAILED_CHECKS++))
+            return 1
         fi
+        
     elif [ "$MODE" = "fix" ]; then
-        apt install -y aide
-        log_info "AIDE installed"
+        if ! command -v aide >/dev/null 2>&1; then
+            save_config "$rule_id" "$rule_name" "not_installed"
+            apt-get install -y aide aide-common
+            
+            log_info "Installing AIDE... initializing database"
+            aideinit
+            log_info "AIDE installed and initialized"
+            ((FIXED_CHECKS++))
+        fi
+        
+    elif [ "$MODE" = "rollback" ]; then
+        local original=$(get_original_config "$rule_id")
+        if [ "$original" = "not_installed" ]; then
+            apt-get remove -y aide aide-common
+            log_info "Removed AIDE"
+        fi
+    fi
+}
+
+check_aide_cron() {
+    local rule_id="AUD-AIDE-CRON"
+    local rule_name="Ensure filesystem integrity is regularly checked"
+    
+    ((TOTAL_CHECKS++))
+    echo ""
+    echo "Checking: $rule_name"
+    echo "Rule ID: $rule_id"
+    
+    if [ "$MODE" = "scan" ]; then
+        if crontab -l 2>/dev/null | grep -q aide || \
+           grep -rq aide /etc/cron.* /etc/crontab 2>/dev/null; then
+            log_pass "AIDE cron job is configured"
+            ((PASSED_CHECKS++))
+            return 0
+        else
+            log_error "AIDE cron job not configured"
+            ((FAILED_CHECKS++))
+            return 1
+        fi
+        
+    elif [ "$MODE" = "fix" ]; then
+        save_config "$rule_id" "$rule_name" "not_configured"
+        
+        echo "0 5 * * * /usr/bin/aide.wrapper --config /etc/aide/aide.conf --check" > /etc/cron.d/aide
+        
+        log_info "Configured AIDE cron job (daily at 5 AM)"
         ((FIXED_CHECKS++))
+        
+    elif [ "$MODE" = "rollback" ]; then
+        rm -f /etc/cron.d/aide
+        log_info "Removed AIDE cron job"
     fi
 }
 
-check_aide_integrity_check() {
-    ((TOTAL_CHECKS++))
-    echo -e "\nChecking: AIDE integrity checks"
-    if [ "$MODE" = "scan" ]; then
-        if grep -q "^/usr/sbin/aide --check" /etc/cron.daily/aide; then
-            log_pass "AIDE integrity check is configured"
-            ((PASSED_CHECKS++))
-        else
-            log_fail "AIDE integrity check is not configured"
-            ((FAILED_CHECKS++))
-        fi
-    fi
-}
-
-check_aide_protection() {
-    ((TOTAL_CHECKS++))
-    echo -e "\nChecking: AIDE protection"
-    if [ "$MODE" = "scan" ]; then
-        if grep -q "cryptographic" /etc/aide/aide.conf; then
-            log_pass "Cryptographic mechanisms are used to protect AIDE"
-            ((PASSED_CHECKS++))
-        else
-            log_fail "AIDE protection with cryptographic mechanisms is not configured"
-            ((FAILED_CHECKS++))
-        fi
-    fi
-}
-
-# =========================
+# ============================================================================
 # Main Execution
-# =========================
-for check in $(declare -F | awk '{print $3}'); do
-    $check
-done
+# ============================================================================
 
-# =========================
-# Summary
-# =========================
-echo -e "\n========================================================"
-echo "Summary"
-echo "========================================================"
-echo "Total Checks: $TOTAL_CHECKS"
-echo "Passed: $PASSED_CHECKS"
-echo "Failed: $FAILED_CHECKS"
-echo "Fixed: $FIXED_CHECKS"
-echo "========================================================"
+main() {
+    echo "========================================================================"
+    echo "Logging and Auditing Hardening Script"
+    echo "Mode: $MODE"
+    echo "========================================================================"
+    
+    if [ "$MODE" = "scan" ] || [ "$MODE" = "fix" ]; then
+        log_info "=== System Logging - journald ==="
+        check_journald_enabled
+        check_journald_compression
+        
+        log_info ""
+        log_info "=== System Logging - rsyslog ==="
+        check_rsyslog_installed
+        check_rsyslog_enabled
+        check_rsyslog_file_permissions
+        check_logrotate
+        check_logfile_permissions
+        
+        log_info ""
+        log_info "=== System Auditing - auditd ==="
+        check_auditd_installed
+        check_auditd_enabled
+        check_audit_log_storage
+        check_audit_rules
+        
+        log_info ""
+        log_info "=== Integrity Checking - AIDE ==="
+        check_aide_installed
+        check_aide_cron
+        
+        echo ""
+        echo "========================================================================"
+        echo "Summary"
+        echo "========================================================================"
+        echo "Total Checks: $TOTAL_CHECKS"
+        
+        if [ "$MODE" = "scan" ]; then
+            echo "Passed: $PASSED_CHECKS"
+            echo "Failed: $FAILED_CHECKS"
+            
+            if [ $FAILED_CHECKS -eq 0 ]; then
+                log_pass "All logging and auditing checks passed!"
+            else
+                log_warn "$FAILED_CHECKS checks failed. Run with 'fix' mode to remediate."
+            fi
+        else
+            echo "Fixed: $FIXED_CHECKS"
+            log_info "Fixes applied. Run 'scan' mode to verify."
+        fi
+        
+    elif [ "$MODE" = "rollback" ]; then
+        log_info "Rolling back logging and auditing configurations..."
+        check_journald_compression
+        check_rsyslog_installed
+        check_rsyslog_file_permissions
+        check_auditd_installed
+        check_audit_log_storage
+        check_audit_rules
+        check_aide_installed
+        check_aide_cron
+        log_info "Rollback completed"
+    else
+        echo "Usage: $0 {scan|fix|rollback}"
+        exit 1
+    fi
+}
 
-if [ "$FAILED_CHECKS" -gt 0 ]; then
-    echo "[FAIL] Issues detected."
-else
-    echo "[PASS] All checks passed."
-fi
-
+main
