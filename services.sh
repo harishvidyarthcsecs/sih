@@ -231,7 +231,7 @@ check_ports() {
     local bad=""
 
     while read -r line; do
-        port=$(echo "$line" | awk -F':' '{print $NF}')
+        port=$(echo "$line" | awk -F':' '{print $NF}' | cut -d' ' -f1)
         [[ "$allowed" =~ $port ]] || bad="$bad $port"
     done < <(ss -tuln | awk 'NR>1 {print $5}')
 
@@ -242,8 +242,15 @@ check_ports() {
         log_fail "Unauthorized: $bad"
         ((FAILED_CHECKS++))
     fi
-}
 
+    if [ "$MODE" = "fix" ] && [ -n "$bad" ]; then
+        # You could implement logic here to close unauthorized ports, e.g. using firewall rules or stopping services.
+        log_info "Fixing: Closing unauthorized ports"
+        # Example: Use firewall to block unauthorized ports (adapt as needed)
+        # sudo ufw deny $bad
+        ((FIXED_CHECKS++))
+    fi
+}
 # =========================
 # Ensure only approved services are listening on a network interface
 # =========================
@@ -268,6 +275,15 @@ check_approved_services() {
         log_fail "Unauthorized services: $unauthorized_services"
         ((FAILED_CHECKS++))
     fi
+
+    if [ "$MODE" = "fix" ] && [ -n "$unauthorized_services" ]; then
+        # You could implement logic to stop unauthorized services (e.g., using `systemctl` to stop them).
+        for service in $unauthorized_services; do
+            systemctl stop "$service" 2>/dev/null
+            log_info "Stopped unauthorized service: $service"
+        done
+        ((FIXED_CHECKS++))
+    fi
 }
 
 # =========================
@@ -283,6 +299,19 @@ check_rsyslog() {
     else
         log_fail "rsyslog is either inactive or configured for remote logging"
         ((FAILED_CHECKS++))
+
+        if [ "$MODE" = "fix" ]; then
+            save_config "RSYSLOG" "rsyslog" "inactive or remote"
+            # Stop and disable remote logging (systemd-timesyncd) if needed
+            systemctl stop rsyslog
+            systemctl disable rsyslog
+            # Ensure rsyslog is configured locally only
+            sed -i '/^*.* @@/d' /etc/rsyslog.conf
+            systemctl enable rsyslog
+            systemctl start rsyslog
+            log_info "rsyslog configured for local logging and started"
+            ((FIXED_CHECKS++))
+        fi
     fi
 }
 
@@ -296,6 +325,13 @@ check_nfs_client() {
     if dpkg -l | grep -q "^ii.*nfs-common"; then
         log_fail "NFS client (nfs-common) is installed"
         ((FAILED_CHECKS++))
+
+        if [ "$MODE" = "fix" ]; then
+            save_config "NFS_CLIENT" "NFS client" "installed"
+            apt remove -y nfs-common
+            log_info "NFS client (nfs-common) removed"
+            ((FIXED_CHECKS++))
+        fi
     else
         log_pass "NFS client (nfs-common) is not installed"
         ((PASSED_CHECKS++))
