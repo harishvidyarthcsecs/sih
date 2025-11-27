@@ -321,6 +321,74 @@ check_apport() {
     fi
 }
 
+check_gpg_keys() {
+    local rule_name="Ensure GPG keys are configured for package management"
+    ((TOTAL_CHECKS++))
+    echo ""
+    echo "Checking: $rule_name"
+
+    if [ -d /etc/apt/trusted.gpg.d ] && [ "$(ls -1 /etc/apt/trusted.gpg.d | wc -l)" -gt 0 ]; then
+        log_pass "APT GPG keyrings are configured"
+        ((PASSED_CHECKS++))
+    else
+        if [ "$MODE" = "fix" ]; then
+            log_warn "GPG keys missing – cannot auto-fix securely"
+            log_warn "Run: apt-key add <keyfile> or use keyserver"
+            ((FAILED_CHECKS++))
+        else
+            log_error "GPG keys not configured"
+            ((FAILED_CHECKS++))
+        fi
+    fi
+}
+
+check_secure_repos() {
+    local rule_name="Ensure package repositories use secure protocols (HTTPS)"
+    ((TOTAL_CHECKS++))
+    echo ""
+    echo "Checking: $rule_name"
+
+    if grep -R "^[^#].*http://" /etc/apt/sources.list /etc/apt/sources.list.d 2>/dev/null; then
+        if [ "$MODE" = "fix" ]; then
+            save_config "PKG-REPO-HTTPS" "$rule_name" "insecure_http_detected"
+            sed -i 's|http://|https://|g' /etc/apt/sources.list /etc/apt/sources.list.d/*.list 2>/dev/null
+            log_fixed "Converted HTTP repo entries to HTTPS"
+            ((FIXED_CHECKS++))
+        else
+            log_error "Insecure HTTP repositories detected"
+            ((FAILED_CHECKS++))
+        fi
+    else
+        log_pass "All package repositories use HTTPS or secure protocols"
+        ((PASSED_CHECKS++))
+    fi
+}
+
+check_unattended_upgrades() {
+    local rule_name="Ensure unattended-upgrades is enabled"
+    ((TOTAL_CHECKS++))
+    echo ""
+    echo "Checking: $rule_name"
+
+    if systemctl is-enabled unattended-upgrades 2>/dev/null | grep -q "enabled"; then
+        log_pass "unattended-upgrades is enabled"
+        ((PASSED_CHECKS++))
+    else
+        if [ "$MODE" = "fix" ]; then
+            save_config "PKG-AUTO-UPDATES" "$rule_name" "disabled"
+            apt-get install -y unattended-upgrades 2>/dev/null
+            systemctl enable unattended-upgrades
+            systemctl start unattended-upgrades
+            log_fixed "unattended-upgrades enabled"
+            ((FIXED_CHECKS++))
+        else
+            log_error "unattended-upgrades is disabled"
+            ((FAILED_CHECKS++))
+        fi
+    fi
+}
+
+
 check_issue_banner() {
     local rule_name="Ensure local login warning banner is configured properly"
     ((TOTAL_CHECKS++))
@@ -395,6 +463,9 @@ check_apport
 # Warning Banners
 check_issue_banner
 check_issue_net_banner
+check_gpg_keys
+check_secure_repos
+check_unattended_upgrades
 
 # ===================================================================
 # Summary
