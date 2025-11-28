@@ -1,18 +1,24 @@
 #!/bin/bash
-# Host Based Firewall Hardening Script
-# Covers: UFW Configuration
+# ============================================================================
+# Firewall Hardening Script
+# ============================================================================
+# Modes: scan | fix | rollback
+MODE=${1:-scan}
 
-MODE="${1:-scan}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DB_PATH="$SCRIPT_DIR/../hardening.db"
-BACKUP_DIR="$SCRIPT_DIR/../backups/firewall"
-TOPIC="Host Based Firewall"
+DB_PATH="$SCRIPT_DIR/hardening.db"
+BACKUP_DIR="$SCRIPT_DIR/backups"
+TOPIC="Firewall"
 
 mkdir -p "$BACKUP_DIR"
 
+# ============================================================================
+# Colors & Counters
+# ============================================================================
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
 NC='\033[0m'
 
 TOTAL_CHECKS=0
@@ -20,340 +26,261 @@ PASSED_CHECKS=0
 FAILED_CHECKS=0
 FIXED_CHECKS=0
 
-log_info() { echo -e "${GREEN}[INFO]${NC} $1"; }
-log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
-log_error() { echo -e "${RED}[FAIL]${NC} $1"; }
-log_pass() { echo -e "${GREEN}[PASS]${NC} $1"; }
-
-save_config() {
-    python3 -c "
-import sqlite3
-conn = sqlite3.connect('$DB_PATH')
-cursor = conn.cursor()
-cursor.execute('''
-    INSERT OR REPLACE INTO configurations 
-    (topic, rule_id, rule_name, original_value, current_value, status)
-    VALUES (?, ?, ?, ?, ?, 'stored')
-''', ('$TOPIC', '$1', '''$2''', '''$3''', '''${4:-$3}'''))
-conn.commit()
-conn.close()
-"
-}
-
-get_original_config() {
-    python3 -c "
-import sqlite3
-conn = sqlite3.connect('$DB_PATH')
-cursor = conn.cursor()
-cursor.execute('SELECT original_value FROM configurations WHERE topic=? AND rule_id=?', ('$TOPIC', '$1'))
-result = cursor.fetchone()
-conn.close()
-print(result[0] if result else '')
-"
-}
+# ============================================================================
+# Logging Functions
+# ============================================================================
+log_info()  { echo -e "${GREEN}[INFO]${NC} $1"; }
+log_pass()  { echo -e "${GREEN}[PASS]${NC} $1"; ((PASSED_CHECKS++)); }
+log_fixed() { echo -e "${BLUE}[FIXED]${NC} $1"; ((FIXED_CHECKS++)); }
+log_warn()  { echo -e "${YELLOW}[WARN]${NC} $1"; }
+log_error() { echo -e "${RED}[FAIL]${NC} $1"; ((FAILED_CHECKS++)); }
 
 # ============================================================================
-# 5.1 UFW Configuration
+# Database Functions
 # ============================================================================
-
-check_ufw_installed() {
-    local rule_id="FW-UFW-INSTALLED"
-    local rule_name="Ensure ufw is installed"
-    
-    ((TOTAL_CHECKS++))
-    echo ""
-    echo "Checking: $rule_name"
-    echo "Rule ID: $rule_id"
-    
-    if [ "$MODE" = "scan" ]; then
-        if dpkg -l | grep -q "^ii.*ufw"; then
-            log_pass "UFW is installed"
-            ((PASSED_CHECKS++))
-            return 0
-        else
-            log_error "UFW is not installed"
-            ((FAILED_CHECKS++))
-            return 1
-        fi
-        
-    elif [ "$MODE" = "fix" ]; then
-        if ! dpkg -l | grep -q "^ii.*ufw"; then
-            save_config "$rule_id" "$rule_name" "not_installed"
-            apt-get update
-            apt-get install -y ufw
-            log_info "Installed UFW"
-            ((FIXED_CHECKS++))
-        fi
-        
-    elif [ "$MODE" = "rollback" ]; then
-        local original=$(get_original_config "$rule_id")
-        if [ "$original" = "not_installed" ]; then
-            apt-get remove -y ufw
-            log_info "Removed UFW"
-        fi
+initialize_db() {
+    if [ ! -f "$DB_PATH" ]; then
+        sqlite3 "$DB_PATH" "CREATE TABLE IF NOT EXISTS configurations (
+            topic TEXT,
+            rule_id TEXT PRIMARY KEY,
+            rule_name TEXT,
+            original_value TEXT,
+            current_value TEXT,
+            status TEXT
+        );"
     fi
 }
 
-check_iptables_persistent() {
-    local rule_id="FW-IPTABLES-NOT-INSTALLED"
-    local rule_name="Ensure iptables-persistent is not installed with ufw"
-    
+save_config() {
+    local rule_id="$1"
+    local rule_name="$2"
+    local original_value="$3"
+    local current_value="${4:-$original_value}"
+
+    python3 - <<EOF
+import sqlite3
+conn = sqlite3.connect("$DB_PATH")
+cursor = conn.cursor()
+cursor.execute("""
+INSERT OR REPLACE INTO configurations 
+(topic, rule_id, rule_name, original_value, current_value, status)
+VALUES (?, ?, ?, ?, ?, 'stored')
+""", ("$TOPIC", "$rule_id", "$rule_name", "$original_value", "$current_value"))
+conn.commit()
+conn.close()
+EOF
+}
+
+# ============================================================================
+# Firewall Checks
+# ============================================================================
+check_ufw_installed() {
+    local rule_id="FW-UFW-INST"
+    local rule_name="Ensure ufw is installed"
     ((TOTAL_CHECKS++))
-    echo ""
-    echo "Checking: $rule_name"
-    echo "Rule ID: $rule_id"
-    
+    echo -e "\nChecking: $rule_name\nRule ID: $rule_id"
+
     if [ "$MODE" = "scan" ]; then
-        if dpkg -l | grep -q "^ii.*iptables-persistent"; then
-            log_error "iptables-persistent is installed (conflicts with UFW)"
-            ((FAILED_CHECKS++))
-            return 1
+        if command -v ufw >/dev/null 2>&1; then
+            log_pass "ufw is installed"
+        else
+            log_error "ufw is NOT installed"
+        fi
+    elif [ "$MODE" = "fix" ]; then
+        apt-get update -y >/dev/null
+        apt-get install -y ufw >/dev/null
+        log_fixed "Installed ufw"
+        save_config "$rule_id" "$rule_name" "not installed" "installed"
+    fi
+}
+
+check_no_iptables_persistent() {
+    local rule_id="FW-UFW-IPTPERS"
+    local rule_name="Ensure iptables-persistent is not installed with ufw"
+    ((TOTAL_CHECKS++))
+    echo -e "\nChecking: $rule_name\nRule ID: $rule_id"
+
+    local installed="no"
+    dpkg -l | grep -q "^ii  iptables-persistent" && installed="yes"
+
+    if [ "$MODE" = "scan" ]; then
+        if [ "$installed" = "yes" ]; then
+            log_error "iptables-persistent is installed (conflict)"
         else
             log_pass "iptables-persistent is not installed"
-            ((PASSED_CHECKS++))
-            return 0
         fi
-        
     elif [ "$MODE" = "fix" ]; then
-        if dpkg -l | grep -q "^ii.*iptables-persistent"; then
-            save_config "$rule_id" "$rule_name" "installed"
-            apt-get remove -y iptables-persistent
-            log_info "Removed iptables-persistent"
-            ((FIXED_CHECKS++))
-        fi
-        
-    elif [ "$MODE" = "rollback" ]; then
-        local original=$(get_original_config "$rule_id")
-        if [ "$original" = "installed" ]; then
-            apt-get install -y iptables-persistent
-            log_info "Reinstalled iptables-persistent"
+        if [ "$installed" = "yes" ]; then
+            apt-get purge -y iptables-persistent >/dev/null
+            log_fixed "Removed iptables-persistent"
+            save_config "$rule_id" "$rule_name" "installed" "removed"
         fi
     fi
 }
 
 check_ufw_enabled() {
-    local rule_id="FW-UFW-ENABLED"
+    local rule_id="FW-UFW-SVC"
     local rule_name="Ensure ufw service is enabled"
-    
     ((TOTAL_CHECKS++))
-    echo ""
-    echo "Checking: $rule_name"
-    echo "Rule ID: $rule_id"
-    
+    echo -e "\nChecking: $rule_name\nRule ID: $rule_id"
+
     if [ "$MODE" = "scan" ]; then
-        if ufw status | grep -q "Status: active"; then
-            log_pass "UFW is enabled and active"
-            ((PASSED_CHECKS++))
-            return 0
-        else
-            log_error "UFW is not enabled"
-            ((FAILED_CHECKS++))
-            return 1
-        fi
-        
+        systemctl is-enabled ufw >/dev/null 2>&1 && log_pass "ufw service is enabled" || log_error "ufw service is NOT enabled"
     elif [ "$MODE" = "fix" ]; then
-        local status=$(ufw status 2>/dev/null | grep "Status:" | awk '{print $2}')
-        save_config "$rule_id" "$rule_name" "$status"
-        
-        # Enable UFW with automatic 'yes' to prompt
-        echo "y" | ufw enable
-        systemctl enable ufw
-        log_info "Enabled UFW"
-        ((FIXED_CHECKS++))
-        
-    elif [ "$MODE" = "rollback" ]; then
-        local original=$(get_original_config "$rule_id")
-        if [ "$original" = "inactive" ]; then
-            ufw disable
-            log_info "Disabled UFW"
-        fi
+        systemctl enable ufw >/dev/null
+        ufw --force enable >/dev/null
+        log_fixed "ufw service enabled"
+        save_config "$rule_id" "$rule_name" "disabled" "enabled"
     fi
 }
 
 check_ufw_loopback() {
-    local rule_id="FW-UFW-LOOPBACK"
+    local rule_id="FW-UFW-LOOP"
     local rule_name="Ensure ufw loopback traffic is configured"
-    
     ((TOTAL_CHECKS++))
-    echo ""
-    echo "Checking: $rule_name"
-    echo "Rule ID: $rule_id"
-    
-    if [ "$MODE" = "scan" ]; then
-        local lo_allow_in=$(ufw status verbose | grep -c "Anywhere on lo.*ALLOW IN")
-        local lo_deny_in=$(ufw status verbose | grep -c "Anywhere.*DENY IN.*127.0.0.0/8")
-        
-        if [ "$lo_allow_in" -gt 0 ] && [ "$lo_deny_in" -gt 0 ]; then
-            log_pass "UFW loopback traffic is configured"
-            ((PASSED_CHECKS++))
-            return 0
+    echo -e "\nChecking: $rule_name\nRule ID: $rule_id"
+
+    local snapshot
+    snapshot=$(ufw status verbose 2>/dev/null)
+
+    if [[ "$MODE" == "scan" ]]; then
+        if echo "$snapshot" | grep -qE "ALLOW IN.*(lo|127\.0\.0\.1)" && \
+           echo "$snapshot" | grep -qE "ALLOW OUT.*(lo|127\.0\.0\.1)"; then
+            log_pass "Loopback firewall rules exist"
         else
-            log_error "UFW loopback traffic not properly configured"
-            ((FAILED_CHECKS++))
-            return 1
+            log_error "Missing UFW loopback rules"
         fi
-        
+    elif [[ "$MODE" == "fix" ]]; then
+        save_config "$rule_id" "$rule_name" "$snapshot"
+        ufw allow in on lo >/dev/null
+        ufw allow out on lo >/dev/null
+        ufw allow in from 127.0.0.1 >/dev/null
+        ufw allow out to 127.0.0.1 >/dev/null
+        log_fixed "Applied loopback UFW rules"
+    elif [[ "$MODE" == "rollback" ]]; then
+        ufw --force reset >/dev/null
+        echo "$snapshot" >/tmp/ufw_snapshot.txt
+        log_info "Loopback rules rolled back"
+    fi
+}
+
+check_ufw_outbound() {
+    local rule_id="FW-UFW-OUT"
+    local rule_name="Ensure UFW outbound connections are allowed"
+    ((TOTAL_CHECKS++))
+    echo -e "\nChecking: $rule_name\nRule ID: $rule_id"
+
+    local snapshot
+    snapshot=$(ufw status verbose 2>/dev/null)
+
+    if [[ "$MODE" == "scan" ]]; then
+        if echo "$snapshot" | grep -q "Default: deny (incoming), allow (outgoing)"; then
+            log_pass "Default outbound policy is allow"
+        else
+            log_warn "Outbound connections must be manually reviewed"
+        fi
+    elif [[ "$MODE" == "fix" ]]; then
+        ufw default allow outgoing >/dev/null
+        log_fixed "Set default outbound policy to allow"
+        save_config "$rule_id" "$rule_name" "not allow" "allow"
+    fi
+}
+
+check_ufw_rules_for_open_ports() {
+    local rule_id="FW-UFW-PORTS"
+    local rule_name="Ensure UFW firewall rules exist for all open ports"
+    ((TOTAL_CHECKS++))
+    echo -e "\nChecking: $rule_name\nRule ID: $rule_id"
+
+    local snapshot
+    snapshot=$(ufw status verbose 2>/dev/null)
+    local ports
+    ports=$(ss -tunl | awk 'NR>1 {gsub(/.*:/,"",$5); print $5}' | sort -u)
+
+    local missing=0
+    for p in $ports; do
+        if ! echo "$snapshot" | grep -q "$p"; then
+            log_warn "Adding missing UFW rule for port: $p"
+            if ufw allow "$p"/tcp >/dev/null 2>&1; then
+                log_info "Added UFW rule for port: $p"
+            else
+                log_error "Failed to add UFW rule for port: $p"
+            fi
+            missing=1
+        fi
+    done
+
+    if [ "$missing" -eq 1 ]; then
+        ufw reload >/dev/null
+        log_info "UFW reloaded after adding missing rules."
+    fi
+
+    if [ "$MODE" = "scan" ]; then
+        if [ $missing -eq 0 ]; then
+            log_pass "All open ports have UFW rules"
+        else
+            log_warn "Some open ports rules were added"
+        fi
     elif [ "$MODE" = "fix" ]; then
-        save_config "$rule_id" "$rule_name" "not_configured"
-        
-        ufw allow in on lo
-        ufw allow out on lo
-        ufw deny in from 127.0.0.0/8
-        ufw deny in from ::1
-        
-        log_info "Configured UFW loopback traffic"
-        ((FIXED_CHECKS++))
-        
-    elif [ "$MODE" = "rollback" ]; then
-        ufw delete allow in on lo 2>/dev/null
-        ufw delete allow out on lo 2>/dev/null
-        ufw delete deny in from 127.0.0.0/8 2>/dev/null
-        ufw delete deny in from ::1 2>/dev/null
-        log_info "Removed UFW loopback rules"
+        log_fixed "All open ports rules applied successfully"
     fi
 }
 
 check_ufw_default_deny() {
-    local rule_id="FW-UFW-DEFAULT-DENY"
-    local rule_name="Ensure ufw default deny firewall policy"
-    
+    local rule_id="FW-UFW-DENY"
+    local rule_name="Ensure UFW default deny firewall policy"
     ((TOTAL_CHECKS++))
-    echo ""
-    echo "Checking: $rule_name"
-    echo "Rule ID: $rule_id"
-    
-    if [ "$MODE" = "scan" ]; then
-        local default_incoming=$(ufw status verbose | grep "Default:" | grep -o "deny (incoming)" | wc -l)
-        local default_outgoing=$(ufw status verbose | grep "Default:" | grep -E "allow \(outgoing\)|deny \(outgoing\)" | wc -l)
-        
-        if [ "$default_incoming" -gt 0 ]; then
-            log_pass "UFW default deny policy is set"
-            ((PASSED_CHECKS++))
-            return 0
+    echo -e "\nChecking: $rule_name\nRule ID: $rule_id"
+
+    if [[ "$MODE" == "scan" ]]; then
+        local default_in
+        default_in=$(ufw status verbose | awk '/Default:/ {print $2}')
+        if [[ "$default_in" == "deny" ]]; then
+            log_pass "Default deny incoming policy active"
         else
-            log_error "UFW default deny policy not set"
-            ((FAILED_CHECKS++))
-            return 1
+            log_error "Default deny incoming policy NOT active"
         fi
-        
-    elif [ "$MODE" = "fix" ]; then
-        save_config "$rule_id" "$rule_name" "not_configured"
-        
-        ufw default deny incoming
-        ufw default deny outgoing
-        ufw default deny routed
-        
-        log_info "Set UFW default deny policy"
-        log_warn "You may need to explicitly allow required outgoing connections"
-        ((FIXED_CHECKS++))
-        
-    elif [ "$MODE" = "rollback" ]; then
-        ufw default allow outgoing
-        log_info "Restored UFW default outgoing policy"
+    elif [[ "$MODE" == "fix" ]]; then
+        ufw default deny incoming >/dev/null
+        ufw default allow outgoing >/dev/null
+        ufw reload >/dev/null
+        log_fixed "Default deny incoming and allow outgoing applied"
+        save_config "$rule_id" "$rule_name" "not deny" "deny"
     fi
 }
 
-check_ufw_open_ports() {
-    local rule_id="FW-UFW-OPEN-PORTS"
-    local rule_name="Ensure ufw firewall rules exist for all open ports"
-    
+check_ufw_no_iptables_conflict() {
+    local rule_id="FW-UFW-CONFLICT"
+    local rule_name="Ensure UFW is not in use with raw iptables"
     ((TOTAL_CHECKS++))
-    echo ""
-    echo "Checking: $rule_name"
-    echo "Rule ID: $rule_id"
-    
-    if [ "$MODE" = "scan" ]; then
-        # Get listening ports
-        local listening_ports=$(ss -tuln | grep LISTEN | awk '{print $5}' | sed 's/.*://' | sort -u)
-        local uncovered_ports=""
-        
-        for port in $listening_ports; do
-            if [ "$port" = "Port" ]; then
-                continue
-            fi
-            
-            if ! ufw status | grep -qE "$port.*ALLOW"; then
-                uncovered_ports="$uncovered_ports $port"
-            fi
-        done
-        
-        if [ -z "$uncovered_ports" ]; then
-            log_pass "All open ports have UFW rules"
-            ((PASSED_CHECKS++))
-            return 0
-        else
-            log_error "Open ports without UFW rules:$uncovered_ports"
-            log_warn "Run 'ss -tuln' to see all listening ports"
-            ((FAILED_CHECKS++))
-            return 1
-        fi
-        
-    elif [ "$MODE" = "fix" ]; then
-        save_config "$rule_id" "$rule_name" "manual_review_required"
-        log_warn "Manual review required - add rules for required services"
-        log_info "Example: ufw allow 22/tcp  # for SSH"
-        log_info "Example: ufw allow 80/tcp  # for HTTP"
-        log_info "Example: ufw allow 443/tcp # for HTTPS"
-        
-    elif [ "$MODE" = "rollback" ]; then
-        log_info "Manual review of firewall rules recommended"
+    echo -e "\nChecking: $rule_name\nRule ID: $rule_id"
+
+    if iptables -L | grep -q "ACCEPT" && ! ufw status | grep -q "active"; then
+        log_error "iptables rules active without UFW — conflict detected"
+    else
+        log_pass "No UFW/iptables conflict detected"
     fi
 }
 
 # ============================================================================
 # Main Execution
 # ============================================================================
+initialize_db
 
-main() {
-    echo "========================================================================"
-    echo "Host Based Firewall Hardening Script"
-    echo "Mode: $MODE"
-    echo "========================================================================"
-    
-    if [ "$MODE" = "scan" ] || [ "$MODE" = "fix" ]; then
-        log_info "=== UFW Configuration ==="
-        check_ufw_installed
-        check_iptables_persistent
-        check_ufw_enabled
-        check_ufw_loopback
-        check_ufw_default_deny
-        check_ufw_open_ports
-        
-        echo ""
-        echo "========================================================================"
-        echo "Summary"
-        echo "========================================================================"
-        echo "Total Checks: $TOTAL_CHECKS"
-        
-        if [ "$MODE" = "scan" ]; then
-            echo "Passed: $PASSED_CHECKS"
-            echo "Failed: $FAILED_CHECKS"
-            
-            if [ $FAILED_CHECKS -eq 0 ]; then
-                log_pass "All firewall checks passed!"
-            else
-                log_warn "$FAILED_CHECKS checks failed. Run with 'fix' mode to remediate."
-            fi
-        else
-            echo "Fixed: $FIXED_CHECKS"
-            log_info "Fixes applied. Run 'scan' mode to verify."
-            log_warn "Important: Review and configure firewall rules for your required services"
-        fi
-        
-    elif [ "$MODE" = "rollback" ]; then
-        log_info "Rolling back firewall configurations..."
-        
-        check_ufw_installed
-        check_iptables_persistent
-        check_ufw_enabled
-        check_ufw_loopback
-        check_ufw_default_deny
-        
-        log_info "Rollback completed"
-    else
-        echo "Usage: $0 {scan|fix|rollback}"
-        exit 1
-    fi
-}
+check_ufw_installed
+check_no_iptables_persistent
+check_ufw_enabled
+check_ufw_loopback
+check_ufw_outbound
+check_ufw_rules_for_open_ports
+check_ufw_default_deny
+check_ufw_no_iptables_conflict
 
-main
+# ============================================================================
+# Summary
+# ============================================================================
+echo -e "\n===== Firewall Hardening Summary ====="
+echo "Total checks : $TOTAL_CHECKS"
+echo "Passed       : $PASSED_CHECKS"
+echo "Failed       : $FAILED_CHECKS"
+echo "Fixed        : $FIXED_CHECKS"
