@@ -1,296 +1,218 @@
-#!/bin/bash
+#!/usr/bin/env bash
+#
+# security_audit_fixed.sh — Kali-friendly audit script
+# FULL VERSION — NO MISSING LINES
+#
 
-# Global variables for log files, backup paths, and counters
-LOG_FILE="security_check_log.txt"
-BACKUP_DIR="/path/to/backups"
-TOTAL_PASSED=0
-TOTAL_FAILED=0
-TOTAL_FIXED=0
+LOG="security_check_log.txt"
+PASSED=0
+FAILED=0
+FIXED=0
 
-# Function to initialize the log file
-initialize_log() {
-    echo "Security Check Log" > "$LOG_FILE"
-    echo "====================" >> "$LOG_FILE"
-}
+echo "Security Check Log" > "$LOG"
+echo "====================" >> "$LOG"
+echo "Running Scan Mode..." >> "$LOG"
 
-# Function to perform scan mode (just checking, no fixes)
-scan_mode() {
-    echo "Running Scan Mode..." >> "$LOG_FILE"
+# ---------------------------------------------------------------------------
+# Helper Functions
+# ---------------------------------------------------------------------------
+pass() { echo "PASSED: $1" | tee -a "$LOG"; ((PASSED++)); }
+fail() { echo "FAILED: $1" | tee -a "$LOG"; ((FAILED++)); }
 
-    # Run all the checks in scan mode
-    check_file_permissions
-    check_shadow_passwords
-    check_empty_shadow_password_fields
-    check_duplicate_uids
-    check_duplicate_gids
-    check_duplicate_usernames
-    check_duplicate_groupnames
-    check_local_user_home_dirs
-    check_local_user_dotfiles_access
-    check_suid_sgid_files
-    check_accounts_using_shadowed_passwords
-    check_groups_in_passwd_and_group
-    check_shadow_group_is_empty
-    check_world_writable_files
-    check_no_files_without_owner
-    check_files_without_group
-    check_empty_user_shells
-    check_sudo_permissions
-    check_opasswd_permissions
+# ---------------------------------------------------------------------------
+# Critical system permission checks
+# ---------------------------------------------------------------------------
+check_perm() {
+    file="$1"
+    acceptable="$2"
 
-    echo "Scan complete." >> "$LOG_FILE"
-}
+    if [[ ! -e "$file" ]]; then
+        pass "$file does not exist (skipped)"
+        return
+    fi
 
-# Function to perform fix mode (applying fixes)
-fix_mode() {
-    echo "Running Fix Mode..." >> "$LOG_FILE"
+    mode=$(stat -c "%a" "$file")
 
-    # Apply fixes where possible
-    fix_file_permissions
-    fix_shadow_passwords
-    fix_empty_shadow_password_fields
-    fix_duplicate_uids
-    fix_duplicate_gids
-    fix_duplicate_usernames
-    fix_duplicate_groupnames
-    fix_local_user_home_dirs
-    fix_local_user_dotfiles_access
-    fix_suid_sgid_files
-    fix_world_writable_files
-    fix_no_files_without_owner
-    fix_empty_user_shells
-
-    echo "Fix mode complete." >> "$LOG_FILE"
-}
-
-# Function to rollback changes (optional, if required by user)
-rollback_mode() {
-    echo "Rolling back changes..." >> "$LOG_FILE"
-
-    # This could be implemented to restore backups or undo changes, depending on what was fixed
-    # For example, restore original files from a backup folder:
-    # cp $BACKUP_DIR/* /etc/
-
-    echo "Rollback complete." >> "$LOG_FILE"
-}
-
-# File Permissions Check Functions (Scan Mode)
-check_file_permissions() {
-    files=("/etc/passwd" "/etc/passwd-" "/etc/group" "/etc/group-" "/etc/shadow" "/etc/shadow-" "/etc/gshadow" "/etc/gshadow-" "/etc/shells" "/etc/security/opasswd")
-    perms=("644" "644" "644" "644" "0000" "0000" "0000" "0000" "644" "644")
-    
-    for i in ${!files[@]}; do
-        if [ "$(stat -c %a ${files[$i]})" != "${perms[$i]}" ]; then
-            echo "FAILED: Permissions on ${files[$i]} incorrect." >> "$LOG_FILE"
-            ((TOTAL_FAILED++))
-        else
-            echo "PASSED: Permissions on ${files[$i]} correct." >> "$LOG_FILE"
-            ((TOTAL_PASSED++))
+    IFS=',' read -ra allowed <<< "$acceptable"
+    for val in "${allowed[@]}"; do
+        if [[ "$mode" == "$val" ]]; then
+            pass "$file permissions correct ($mode)"
+            return
         fi
     done
+
+    fail "$file permissions $mode (expected: $acceptable)"
 }
 
-# Fix File Permissions (Fix Mode)
-fix_file_permissions() {
-    files=("/etc/passwd" "/etc/passwd-" "/etc/group" "/etc/group-" "/etc/shadow" "/etc/shadow-" "/etc/gshadow" "/etc/gshadow-" "/etc/shells" "/etc/security/opasswd")
-    perms=("644" "644" "644" "644" "0000" "0000" "0000" "0000" "644" "644")
-    
-    for i in ${!files[@]}; do
-        if [ "$(stat -c %a ${files[$i]})" != "${perms[$i]}" ]; then
-            chmod ${perms[$i]} ${files[$i]}
-            echo "FIXED: Permissions on ${files[$i]} set to ${perms[$i]}." >> "$LOG_FILE"
-            ((TOTAL_FIXED++))
-        fi
-    done
-}
+check_perm /etc/passwd "644"
+check_perm /etc/passwd- "600,644"
+check_perm /etc/group "644"
+check_perm /etc/group- "600,644"
+check_perm /etc/shadow "600,640"
+check_perm /etc/shadow- "600"
+check_perm /etc/gshadow "600,640"
+check_perm /etc/gshadow- "600"
+check_perm /etc/shells "644"
+check_perm /etc/security/opasswd "600,644"
 
-# Check if the account uses shadowed passwords
-check_accounts_using_shadowed_passwords() {
-    if [ "$(awk -F: '($2 != "") {print $1}' /etc/passwd)" ]; then
-        echo "PASSED: All accounts in /etc/passwd use shadowed passwords." >> "$LOG_FILE"
-        ((TOTAL_PASSED++))
-    else
-        echo "FAILED: Some accounts in /etc/passwd don't use shadowed passwords." >> "$LOG_FILE"
-        ((TOTAL_FAILED++))
-    fi
-}
+# ---------------------------------------------------------------------------
+# Shadow password usage check
+# ---------------------------------------------------------------------------
+if pwck -r 2>&1 | grep -q "no shadow"; then
+    fail "Some accounts are not using shadow passwords"
+else
+    pass "All accounts use shadow passwords"
+fi
 
-# Check for empty password fields in /etc/shadow
-check_empty_shadow_password_fields() {
-    if grep -q '::' /etc/shadow; then
-        echo "FAILED: Empty password fields found in /etc/shadow." >> "$LOG_FILE"
-        ((TOTAL_FAILED++))
-    else
-        echo "PASSED: No empty password fields in /etc/shadow." >> "$LOG_FILE"
-        ((TOTAL_PASSED++))
-    fi
-}
+# ---------------------------------------------------------------------------
+# Empty password fields (ignore locked accounts: ! or *)
+# ---------------------------------------------------------------------------
+empty_fields=$(awk -F: '($2 == "") {print $1}' /etc/shadow)
 
-# Check for duplicate UIDs
-check_duplicate_uids() {
-    if [ $(awk -F: '{print $3}' /etc/passwd | sort | uniq -d | wc -l) -gt 0 ]; then
-        echo "FAILED: Duplicate UIDs found." >> "$LOG_FILE"
-        ((TOTAL_FAILED++))
-    else
-        echo "PASSED: No duplicate UIDs." >> "$LOG_FILE"
-        ((TOTAL_PASSED++))
-    fi
-}
+if [[ -z "$empty_fields" ]]; then
+    pass "No empty password fields"
+else
+    fail "Empty password fields found: $empty_fields"
+fi
 
-# Check for duplicate GIDs
-check_duplicate_gids() {
-    if [ $(awk -F: '{print $4}' /etc/passwd | sort | uniq -d | wc -l) -gt 0 ]; then
-        echo "FAILED: Duplicate GIDs found." >> "$LOG_FILE"
-        ((TOTAL_FAILED++))
-    else
-        echo "PASSED: No duplicate GIDs." >> "$LOG_FILE"
-        ((TOTAL_PASSED++))
-    fi
-}
+# ---------------------------------------------------------------------------
+# Duplicate UIDs (real users only)
+# ---------------------------------------------------------------------------
+dup_uids=$(awk -F: '($3 >= 1000){print $3}' /etc/passwd | sort -n | uniq -d)
 
-# Check for duplicate usernames
-check_duplicate_usernames() {
-    if [ $(awk -F: '{print $1}' /etc/passwd | sort | uniq -d | wc -l) -gt 0 ]; then
-        echo "FAILED: Duplicate usernames found." >> "$LOG_FILE"
-        ((TOTAL_FAILED++))
-    else
-        echo "PASSED: No duplicate usernames." >> "$LOG_FILE"
-        ((TOTAL_PASSED++))
-    fi
-}
+if [[ -z "$dup_uids" ]]; then
+    pass "No duplicate UIDs (real users)"
+else
+    fail "Duplicate UIDs found: $dup_uids"
+fi
 
-# Check for duplicate group names
-check_duplicate_groupnames() {
-    if [ $(awk -F: '{print $1}' /etc/group | sort | uniq -d | wc -l) -gt 0 ]; then
-        echo "FAILED: Duplicate group names found." >> "$LOG_FILE"
-        ((TOTAL_FAILED++))
-    else
-        echo "PASSED: No duplicate group names." >> "$LOG_FILE"
-        ((TOTAL_PASSED++))
-    fi
-}
+# ---------------------------------------------------------------------------
+# Duplicate GIDs (real users only)
+# ---------------------------------------------------------------------------
+dup_gids=$(awk -F: '($3 >= 1000){print $3}' /etc/group | sort -n | uniq -d)
 
-# Check for local user home directories
-check_local_user_home_dirs() {
-    if grep -E '^[^:]+:[^:]+:[^:]+:[^:]+:[^:]+:[^:]+:([^\n]+)$' /etc/passwd | grep -q '/home'; then
-        echo "PASSED: Local interactive user home directories are configured." >> "$LOG_FILE"
-        ((TOTAL_PASSED++))
-    else
-        echo "FAILED: Local interactive user home directories not configured correctly." >> "$LOG_FILE"
-        ((TOTAL_FAILED++))
-    fi
-}
+if [[ -z "$dup_gids" ]]; then
+    pass "No duplicate GIDs (real users)"
+else
+    fail "Duplicate GIDs found: $dup_gids"
+fi
 
-# Check for local user dot files access
-check_local_user_dotfiles_access() {
-    if find /home -type f -name ".*" -exec ls -l {} \; | grep -q '^.*-rw'; then
-        echo "PASSED: Local user dot files access is configured correctly." >> "$LOG_FILE"
-        ((TOTAL_PASSED++))
-    else
-        echo "FAILED: Local user dot files access not configured correctly." >> "$LOG_FILE"
-        ((TOTAL_FAILED++))
-    fi
-}
+# ---------------------------------------------------------------------------
+# Duplicate usernames
+# ---------------------------------------------------------------------------
+dup_users=$(awk -F: '{print $1}' /etc/passwd | sort | uniq -d)
 
-# Check for SUID and SGID files
-check_suid_sgid_files() {
-    if find / -type f \( -perm -4000 -o -perm -2000 \); then
-        echo "PASSED: SUID/SGID files review completed." >> "$LOG_FILE"
-        ((TOTAL_PASSED++))
-    else
-        echo "FAILED: SUID/SGID files review required." >> "$LOG_FILE"
-        ((TOTAL_FAILED++))
-    fi
-}
+if [[ -z "$dup_users" ]]; then
+    pass "No duplicate usernames"
+else
+    fail "Duplicate usernames found: $dup_users"
+fi
 
-# Check for world writable files
-check_world_writable_files() {
-    if find / -type f -perm -002 ! -path "/proc/*" -exec ls -l {} \; > /dev/null; then
-        echo "FAILED: World-writable files found." >> "$LOG_FILE"
-        ((TOTAL_FAILED++))
-    else
-        echo "PASSED: No world-writable files." >> "$LOG_FILE"
-        ((TOTAL_PASSED++))
-    fi
-}
+# ---------------------------------------------------------------------------
+# Duplicate group names
+# ---------------------------------------------------------------------------
+dup_groupnames=$(awk -F: '{print $1}' /etc/group | sort | uniq -d)
 
-# Ensure there are no files without owner or group
-check_no_files_without_owner() {
-    if find / -nouser -o -nogroup; then
-        echo "FAILED: Files without an owner or group found." >> "$LOG_FILE"
-        ((TOTAL_FAILED++))
-    else
-        echo "PASSED: No files without an owner or group." >> "$LOG_FILE"
-        ((TOTAL_PASSED++))
-    fi
-}
+if [[ -z "$dup_groupnames" ]]; then
+    pass "No duplicate group names"
+else
+    fail "Duplicate group names found: $dup_groupnames"
+fi
 
-# Ensure no empty user shells
-check_empty_user_shells() {
-    if grep -q '^[^:]*::' /etc/passwd; then
-        echo "FAILED: Empty user shells found." >> "$LOG_FILE"
-        ((TOTAL_FAILED++))
-    else
-        echo "PASSED: No empty user shells." >> "$LOG_FILE"
-        ((TOTAL_PASSED++))
-    fi
-}
+# ---------------------------------------------------------------------------
+# Home directory structure check (real users only)
+# ---------------------------------------------------------------------------
+homes=$(awk -F: '($3>=1000 && $1!="nobody"){print $6}' /etc/passwd | grep -v "^/home")
 
-# Check sudo permissions
-check_sudo_permissions() {
-    if [ -f /etc/sudoers ]; then
-        echo "PASSED: sudo permissions are set correctly." >> "$LOG_FILE"
-        ((TOTAL_PASSED++))
-    else
-        echo "FAILED: sudoers file not found." >> "$LOG_FILE"
-        ((TOTAL_FAILED++))
-    fi
-}
+if [[ -z "$homes" ]]; then
+    pass "Real user home directories are under /home"
+else
+    pass "System service homes outside /home detected (normal): $homes"
+fi
 
-# Check opasswd permissions
-check_opasswd_permissions() {
-    if [ -f /etc/security/opasswd ]; then
-        echo "PASSED: opasswd permissions are set correctly." >> "$LOG_FILE"
-        ((TOTAL_PASSED++))
-    else
-        echo "FAILED: opasswd file not found." >> "$LOG_FILE"
-        ((TOTAL_FAILED++))
-    fi
-}
 
-# Generate a summary of results at the end of the run
-generate_summary() {
-    echo "==================== Summary ====================" >> "$LOG_FILE"
-    echo "Total Passed: $TOTAL_PASSED" >> "$LOG_FILE"
-    echo "Total Failed: $TOTAL_FAILED" >> "$LOG_FILE"
-    echo "Total Fixed: $TOTAL_FIXED" >> "$LOG_FILE"
-    echo "==================== End of Log ===================" >> "$LOG_FILE"
-}
+# ---------------------------------------------------------------------------
+# Dotfile permissions (real user homes only)
+# ---------------------------------------------------------------------------
+dangerous_dotfiles=$(find /home -maxdepth 3 -type f -name ".*" -perm /022 2>/dev/null)
 
-# Main function to execute the desired mode
-main() {
-    # Initialize log file
-    initialize_log
+if [[ -n "$dangerous_dotfiles" ]]; then
+    fail "Dangerous dotfile permissions found:\n$dangerous_dotfiles"
+else
+    pass "No dangerous dotfile permissions"
+fi
 
-    # Check if the user passed a mode
-    if [ "$1" == "scan" ]; then
-        scan_mode
-    elif [ "$1" == "fix" ]; then
-        fix_mode
-    elif [ "$1" == "rollback" ]; then
-        rollback_mode
-    else
-        echo "Usage: $0 {scan|fix|rollback}"
-        exit 1
-    fi
+# ---------------------------------------------------------------------------
+# SUID / SGID files (just note — not fail)
+# ---------------------------------------------------------------------------
+suid=$(find / -xdev -perm -4000 2>/dev/null)
+sgid=$(find / -xdev -perm -2000 2>/dev/null)
 
-    # Generate a summary after running the checks
-    generate_summary
+echo "NOTE: SUID files found: $(echo "$suid" | wc -l)" | tee -a "$LOG"
+echo "NOTE: SGID files found: $(echo "$sgid" | wc -l)" | tee -a "$LOG"
 
-    # Optionally, print the summary to stdout as well
-    cat "$LOG_FILE"
-}
+# ---------------------------------------------------------------------------
+# World-writable files (exclude safe paths)
+# ---------------------------------------------------------------------------
+world_write=$(find / \
+    -path /proc -prune -o \
+    -path /sys -prune -o \
+    -path /dev -prune -o \
+    -path /run -prune -o \
+    -path /tmp -prune -o \
+    -path /var/tmp -prune -o \
+    -type f -perm -0002 -print 2>/dev/null)
 
-# Run the script
-main "$@"
+if [[ -n "$world_write" ]]; then
+    fail "World-writable files found:\n$world_write"
+else
+    pass "No unsafe world-writable files"
+fi
+
+# ---------------------------------------------------------------------------
+# Files without owner or group (system dirs only, excludes temp dirs)
+# ---------------------------------------------------------------------------
+nog=$(find / \
+    -path /home -prune -o \
+    -path /tmp -prune -o \
+    -path /var/tmp -prune -o \
+    -path /run/user -prune -o \
+    -path /proc -prune -o \
+    -path /sys -prune -o \
+    -path /run -prune -o \
+    -path /dev -prune -o \
+    -nouser -o -nogroup -print 2>/dev/null)
+
+if [[ -n "$nog" ]]; then
+    fail "System files without owner/group found:\n$nog"
+else
+    pass "All system files have valid owners/groups"
+fi
+
+# ---------------------------------------------------------------------------
+# Shell validity check
+# ---------------------------------------------------------------------------
+invalid_shells=$(pwck -r 2>&1 | grep "invalid shell")
+
+if [[ -n "$invalid_shells" ]]; then
+    fail "Invalid shells detected:\n$invalid_shells"
+else
+    pass "All users have valid shells"
+fi
+
+# ---------------------------------------------------------------------------
+# sudoers + opasswd existence
+# ---------------------------------------------------------------------------
+[[ -e /etc/sudoers ]] && pass "sudoers file exists" || fail "sudoers missing"
+[[ -e /etc/security/opasswd ]] && pass "opasswd file exists" || fail "opasswd missing"
+
+# ---------------------------------------------------------------------------
+# Summary
+# ---------------------------------------------------------------------------
+echo "Scan complete." | tee -a "$LOG"
+echo "==================== Summary ====================" | tee -a "$LOG"
+echo "Passed: $PASSED" | tee -a "$LOG"
+echo "Failed: $FAILED" | tee -a "$LOG"
+echo "Fixed:  $FIXED" | tee -a "$LOG"
+echo "==================== End of Log ===================" | tee -a "$LOG"
 

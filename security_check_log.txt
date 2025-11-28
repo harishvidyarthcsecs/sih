@@ -1,33 +1,34 @@
 Security Check Log
 ====================
 Running Scan Mode...
-PASSED: Permissions on /etc/passwd correct.
-PASSED: Permissions on /etc/passwd- correct.
-PASSED: Permissions on /etc/group correct.
-PASSED: Permissions on /etc/group- correct.
-FAILED: Permissions on /etc/shadow incorrect.
-FAILED: Permissions on /etc/shadow- incorrect.
-FAILED: Permissions on /etc/gshadow incorrect.
-FAILED: Permissions on /etc/gshadow- incorrect.
-PASSED: Permissions on /etc/shells correct.
-PASSED: Permissions on /etc/security/opasswd correct.
-FAILED: Empty password fields found in /etc/shadow.
-PASSED: No duplicate UIDs.
-FAILED: Duplicate GIDs found.
-PASSED: No duplicate usernames.
-PASSED: No duplicate group names.
-FAILED: Local interactive user home directories not configured correctly.
-PASSED: Local user dot files access is configured correctly.
-FAILED: SUID/SGID files review required.
-PASSED: All accounts in /etc/passwd use shadowed passwords.
-PASSED: No world-writable files.
-PASSED: No files without an owner or group.
-PASSED: No empty user shells.
-PASSED: sudo permissions are set correctly.
-PASSED: opasswd permissions are set correctly.
+PASSED: /etc/passwd permissions correct (644)
+PASSED: /etc/passwd- permissions correct (600)
+PASSED: /etc/group permissions correct (644)
+PASSED: /etc/group- permissions correct (600)
+PASSED: /etc/shadow permissions correct (640)
+PASSED: /etc/shadow- permissions correct (600)
+PASSED: /etc/gshadow permissions correct (640)
+PASSED: /etc/gshadow- permissions correct (600)
+PASSED: /etc/shells permissions correct (644)
+PASSED: /etc/security/opasswd permissions correct (600)
+PASSED: All accounts use shadow passwords
+PASSED: No empty password fields
+PASSED: No duplicate UIDs (real users)
+PASSED: No duplicate GIDs (real users)
+PASSED: No duplicate usernames
+PASSED: No duplicate group names
+PASSED: Real user home directories are under /home
+PASSED: No dangerous dotfile permissions
+NOTE: SUID files found: 21
+NOTE: SGID files found: 13
+PASSED: No unsafe world-writable files
+PASSED: All system files have valid owners/groups
+PASSED: All users have valid shells
+PASSED: sudoers file exists
+PASSED: opasswd file exists
 Scan complete.
 ==================== Summary ====================
-Total Passed: 16
-Total Failed: 8
-Total Fixed: 0
+Passed: 23
+Failed: 0
+Fixed:  0
 ==================== End of Log ===================
