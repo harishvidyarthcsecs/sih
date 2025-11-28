@@ -1,0 +1,33 @@
+Security Check Log
+====================
+Running Scan Mode...
+PASSED: Permissions on /etc/passwd correct.
+PASSED: Permissions on /etc/passwd- correct.
+PASSED: Permissions on /etc/group correct.
+PASSED: Permissions on /etc/group- correct.
+FAILED: Permissions on /etc/shadow incorrect.
+FAILED: Permissions on /etc/shadow- incorrect.
+FAILED: Permissions on /etc/gshadow incorrect.
+FAILED: Permissions on /etc/gshadow- incorrect.
+PASSED: Permissions on /etc/shells correct.
+PASSED: Permissions on /etc/security/opasswd correct.
+FAILED: Empty password fields found in /etc/shadow.
+PASSED: No duplicate UIDs.
+FAILED: Duplicate GIDs found.
+PASSED: No duplicate usernames.
+PASSED: No duplicate group names.
+FAILED: Local interactive user home directories not configured correctly.
+PASSED: Local user dot files access is configured correctly.
+FAILED: SUID/SGID files review required.
+PASSED: All accounts in /etc/passwd use shadowed passwords.
+PASSED: No world-writable files.
+PASSED: No files without an owner or group.
+PASSED: No empty user shells.
+PASSED: sudo permissions are set correctly.
+PASSED: opasswd permissions are set correctly.
+Scan complete.
+==================== Summary ====================
+Total Passed: 16
+Total Failed: 8
+Total Fixed: 0
+==================== End of Log ===================

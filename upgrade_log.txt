@@ -1,0 +1,1181 @@
+First 10 Upgradable Packages:
+Listing...
+7zip/kali-rolling 25.01+dfsg-4 arm64 [upgradable from: 25.01+dfsg-2]
+accountsservice/kali-rolling 23.13.9-8 arm64 [upgradable from: 23.13.9-7]
+adduser/kali-rolling 3.153 all [upgradable from: 3.152]
+adwaita-icon-theme/kali-rolling 49.0-1 all [upgradable from: 48.1-1]
+aircrack-ng/kali-rolling 1:1.7+git20230807.4bf83f1a-2+b1 arm64 [upgradable from: 1:1.7+git20230807.4bf83f1a-2]
+amass/kali-rolling 5.0.1-0kali4 arm64 [upgradable from: 4.2.0-0kali1]
+apt-utils/kali-rolling 3.1.12+kali1 arm64 [upgradable from: 3.1.4+kali1]
+apt/kali-rolling 3.1.12+kali1 arm64 [upgradable from: 3.1.4+kali1]
+arping/kali-rolling 2.26-1+b1 arm64 [upgradable from: 2.26-1]
+----------------------------------------
+Python-related Upgradable Packages:
+ipython3/kali-rolling 8.35.0-2 all [upgradable from: 8.35.0-1]
+libpython3-dev/kali-rolling 3.13.7-1 arm64 [upgradable from: 3.13.5-1]
+libpython3-stdlib/kali-rolling 3.13.7-1 arm64 [upgradable from: 3.13.5-1]
+libpython3.13-dev/kali-rolling 3.13.9-1 arm64 [upgradable from: 3.13.7-1]
+libpython3.13-minimal/kali-rolling 3.13.9-1 arm64 [upgradable from: 3.13.7-1]
+libpython3.13-stdlib/kali-rolling 3.13.9-1 arm64 [upgradable from: 3.13.7-1]
+libpython3.13/kali-rolling 3.13.9-1 arm64 [upgradable from: 3.13.7-1]
+offsec-awae-python2/kali-rolling 2025.4.0 arm64 [upgradable from: 2025.3.0]
+python-matplotlib-data/kali-rolling 3.10.7+dfsg1-1 all [upgradable from: 3.10.1+dfsg1-4]
+python-tables-data/kali-rolling 3.10.2-3 all [upgradable from: 3.10.2-2]
+python3-aesedb/kali-rolling 0.1.4-0kali1 all [upgradable from: 0.1.3+git20230221.9b7c468-0kali1]
+python3-aiodns/kali-rolling 3.5.0-1 all [upgradable from: 3.2.0-2]
+python3-aiofiles/kali-rolling 25.1.0-1 all [upgradable from: 24.1.0-2]
+python3-aiohappyeyeballs/kali-rolling 2.6.1-2 all [upgradable from: 2.6.1-1]
+python3-aiohttp/kali-rolling 3.13.1-1 arm64 [upgradable from: 3.11.16-1]
+python3-alembic/kali-rolling 1.16.4-2 all [upgradable from: 1.13.2-4]
+python3-altgraph/kali-rolling 0.17.4+ds-4 all [upgradable from: 0.17.4+ds-3]
+python3-amqp/kali-rolling 5.3.1-3 all [upgradable from: 5.3.1-2]
+python3-anyio/kali-rolling 4.11.0-3 all [upgradable from: 4.8.0-3]
+python3-apispec/kali-rolling 6.8.4-1 all [upgradable from: 6.8.2-1]
+python3-argcomplete/kali-rolling 3.6.3-1 all [upgradable from: 3.6.2-1]
+python3-asgiref/kali-rolling 3.9.1-2 all [upgradable from: 3.8.1-1]
+python3-attr/kali-rolling 25.4.0-1 all [upgradable from: 25.3.0-1]
+python3-autobahn/kali-rolling 24.4.2+dfsg1-2 all [upgradable from: 23.1.2+dfsg1-2]
+python3-bcrypt/kali-rolling 4.3.0-2 arm64 [upgradable from: 4.2.0-2.1+b1]
+python3-billiard/kali-rolling 4.2.2-1 all [upgradable from: 4.2.1-3]
+python3-bitstruct/kali-rolling 8.21.0-1 arm64 [upgradable from: 8.20.0-2]
+python3-brlapi/kali-rolling 6.8-4 arm64 [upgradable from: 6.8-2]
+python3-bs4/kali-rolling 4.14.2-1 all [upgradable from: 4.13.4-4]
+python3-celery/kali-rolling 5.5.3-3 all [upgradable from: 5.5.3-1]
+python3-censys/kali-rolling 2.2.18-2 all [upgradable from: 2.2.18-1]
+python3-certifi/kali-rolling 2025.11.12+ds-1 all [upgradable from: 2025.1.31+ds-1]
+python3-cffi-backend/kali-rolling 2.0.0-2 arm64 [upgradable from: 2.0.0~b1-1]
+python3-cffi/kali-rolling 2.0.0-2 all [upgradable from: 2.0.0~b1-1]
+python3-croniter/kali-rolling 6.0.0-2 all [upgradable from: 2.0.7-3]
+python3-cryptography/kali-rolling 45.0.7-1 arm64 [upgradable from: 43.0.0-3]
+python3-cups/kali-rolling 2.0.4-3 arm64 [upgradable from: 2.0.4-2+b2]
+python3-deprecated/kali-rolling 1.3.1-1 all [upgradable from: 1.2.18-1]
+python3-dev/kali-rolling 3.13.7-1 arm64 [upgradable from: 3.13.5-1]
+python3-django/kali-rolling 3:4.2.26-1 all [upgradable from: 3:4.2.23-1]
+python3-docx/kali-rolling 1.2.0+dfsg-1 all [upgradable from: 1.1.2+dfsg-1]
+python3-elastic-transport/kali-rolling 9.2.0-1 all [upgradable from: 8.17.1-2]
+python3-elasticsearch/kali-rolling 9.2.0-1 all [upgradable from: 8.17.2-2]
+python3-fastapi/kali-rolling 0.118.0-1 all [upgradable from: 0.115.11-4]
+python3-feedparser/kali-rolling 6.0.12-1 all [upgradable from: 6.0.11-2]
+python3-filelock/kali-rolling 3.20.0-1 all [upgradable from: 3.19.1-1]
+python3-flask-limiter/kali-rolling 3.12-2 all [upgradable from: 3.12-1]
+python3-flask-restful/kali-rolling 0.3.10-7 all [upgradable from: 0.3.10-6]
+python3-flask/kali-rolling 3.1.2-1 all [upgradable from: 3.1.1-1]
+python3-fonttools/kali-rolling 4.57.0-2 arm64 [upgradable from: 4.57.0-1]
+python3-frozenlist/kali-rolling 1.8.0-1 arm64 [upgradable from: 1.7.0-1]
+python3-fs/kali-rolling 2.4.16-9 all [upgradable from: 2.4.16-7]
+python3-gdal/kali-rolling 3.12.0+dfsg-1 arm64 [upgradable from: 3.11.3+dfsg-1]
+python3-git/kali-rolling 3.1.45-1 all [upgradable from: 3.1.44-1]
+python3-gpg/kali-rolling 2.0.0-2 arm64 [upgradable from: 1.24.2-3]
+python3-greenlet/kali-rolling 3.2.4-2 arm64 [upgradable from: 3.1.0-1+b2]
+python3-gssapi/kali-rolling 1.10.1-1 arm64 [upgradable from: 1.9.0-1+b2]
+python3-gvm/kali-rolling 26.7.0-1 all [upgradable from: 26.5.0-1]
+python3-h2/kali-rolling 4.3.0-1 all [upgradable from: 4.2.0-1]
+python3-httpcore/kali-rolling 1.0.9-1 all [upgradable from: 1.0.7-1]
+python3-hyperframe/kali-rolling 6.1.0-1 all [upgradable from: 6.0.0-1]
+python3-impacket/kali-rolling 0.13.0-1 all [upgradable from: 0.12.0+gite61ff5d-0kali1]
+python3-inflect/kali-rolling 7.5.0-1 all [upgradable from: 7.3.1-2]
+python3-iniconfig/kali-rolling 2.1.0-1 all [upgradable from: 1.1.1-2]
+python3-ipython/kali-rolling 8.35.0-2 all [upgradable from: 8.35.0-1]
+python3-jsonschema/kali-rolling 4.25.1-2 all [upgradable from: 4.19.2-6]
+python3-kaitaistruct/kali-rolling 0.11-1 all [upgradable from: 0.10-1]
+python3-kismetcapturefreaklabszigbee/kali-rolling 2025.09.R1-0kali3 all [upgradable from: 2023.07.R2-0kali2]
+python3-kismetcapturertl433/kali-rolling 2025.09.R1-0kali3 all [upgradable from: 2023.07.R2-0kali2]
+python3-kismetcapturertladsb/kali-rolling 2025.09.R1-0kali3 all [upgradable from: 2023.07.R2-0kali2]
+python3-kiwisolver/kali-rolling 1.4.10~rc0-1 arm64 [upgradable from: 1.4.7-3+b1]
+python3-kombu/kali-rolling 5.5.4-2 all [upgradable from: 5.5.4-1]
+python3-ldb/kali-rolling 2:2.11.0+samba4.23.3+dfsg-1+b1 arm64 [upgradable from: 2:2.11.0+samba4.22.4+dfsg-1]
+python3-legacy-cgi/kali-rolling 2.6.4-1 all [upgradable from: 2.6.3-1]
+python3-louis/kali-rolling 3.35.0-2 all [upgradable from: 3.33.0-1]
+python3-lxml/kali-rolling 6.0.2-1 arm64 [upgradable from: 5.4.0-1+b1]
+python3-lz4/kali-rolling 4.4.4+dfsg-3 arm64 [upgradable from: 4.4.4+dfsg-1]
+python3-mako/kali-rolling 1.3.10-3 all [upgradable from: 1.3.9-1]
+python3-markdown2/kali-rolling 2.5.4-2 all [upgradable from: 2.4.11-1]
+python3-markdown/kali-rolling 3.10-1 all [upgradable from: 3.7-2]
+python3-markupsafe/kali-rolling 3.0.3-1 arm64 [upgradable from: 2.1.5-1+b4]
+python3-matplotlib/kali-rolling 3.10.7+dfsg1-1 arm64 [upgradable from: 3.10.1+dfsg1-4]
+python3-mechanize/kali-rolling 1:0.4.10+ds-6 all [upgradable from: 1:0.4.10+ds-5]
+python3-minimal/kali-rolling 3.13.7-1 arm64 [upgradable from: 3.13.5-1]
+python3-mistune/kali-rolling 3.1.4-1 all [upgradable from: 3.1.3-1]
+python3-more-itertools/kali-rolling 10.8.0-1 all [upgradable from: 10.7.0-1]
+python3-mpmath/kali-rolling 1.3.0-2 all [upgradable from: 1.3.0-1]
+python3-multipart/kali-rolling 1.3.0-3 all [upgradable from: 1.3.0-1]
+python3-nacl/kali-rolling 1.5.0-8 arm64 [upgradable from: 1.5.0-7]
+python3-networkx/kali-rolling 3.4.2-2 all [upgradable from: 3.2.1-5]
+python3-numexpr/kali-rolling 2.14.1-1 arm64 [upgradable from: 2.11.0-1]
+python3-numpy-dev/kali-rolling 1:2.3.5+ds-2 arm64 [upgradable from: 1:2.2.4+ds-1]
+python3-numpy/kali-rolling 1:2.3.5+ds-2 arm64 [upgradable from: 1:2.2.4+ds-1]
+python3-openpyxl/kali-rolling 3.1.5+dfsg-3 all [upgradable from: 3.1.5+dfsg-2]
+python3-openssl/kali-rolling 25.3.0-1 all [upgradable from: 25.1.0-1]
+python3-pandas-lib/kali-rolling 2.3.3+dfsg-2 arm64 [upgradable from: 2.2.3+dfsg-9]
+python3-pandas/kali-rolling 2.3.3+dfsg-2 all [upgradable from: 2.2.3+dfsg-9]
+python3-paramiko/kali-rolling 4.0.0-1 all [upgradable from: 3.5.1-3]
+python3-parso/kali-rolling 0.8.5-1 all [upgradable from: 0.8.4-1]
+python3-pastedeploy-tpl/kali-rolling 3.1-2 all [upgradable from: 3.1-1]
+python3-pastedeploy/kali-rolling 3.1-2 all [upgradable from: 3.1-1]
+python3-pil.imagetk/kali-rolling 11.3.0-1 arm64 [upgradable from: 11.1.0-5+b1]
+python3-pil/kali-rolling 11.3.0-1 arm64 [upgradable from: 11.1.0-5+b1]
+python3-platformdirs/kali-rolling 4.4.0-1 all [upgradable from: 4.3.7-1]
+python3-png/kali-rolling 0.20250521.0-1 all [upgradable from: 0.20231004.0-4]
+python3-prettytable/kali-rolling 3.16.0-1 all [upgradable from: 3.15.1-1]
+python3-prompt-toolkit/kali-rolling 3.0.52-1 all [upgradable from: 3.0.51-4]
+python3-protobuf/kali-rolling 3.21.12-14 arm64 [upgradable from: 3.21.12-11]
+python3-psutil/kali-rolling 7.1.0-1 arm64 [upgradable from: 7.0.0-2]
+python3-psycopg-c/kali-rolling 3.2.10-2 arm64 [upgradable from: 3.2.6-1]
+python3-psycopg/kali-rolling 3.2.10-2 all [upgradable from: 3.2.6-1]
+python3-pycares/kali-rolling 4.9.0-1 arm64 [upgradable from: 4.4.0-2+b4]
+python3-pycparser/kali-rolling 2.23-1 all [upgradable from: 2.22-2]
+python3-pycurl/kali-rolling 7.45.7-3 arm64 [upgradable from: 7.45.6-1]
+python3-pydantic-core/kali-rolling 2.41.5-1 arm64 [upgradable from: 2.27.2-3+b1]
+python3-pydantic/kali-rolling 2.12.4-1 arm64 [upgradable from: 2.10.6-2]
+python3-pyexploitdb/kali-rolling 0.2.102-0kali1 all [upgradable from: 0.2.95-0kali1]
+python3-pygame/kali-rolling 2.6.1-2 arm64 [upgradable from: 2.6.1-1+b2]
+python3-pyinstaller/kali-rolling 6.16.0+ds-1 arm64 [upgradable from: 6.15.0+ds-1]
+python3-pymssql/kali-rolling 2.3.7-1 arm64 [upgradable from: 2.3.2-1+b1]
+python3-pyparsing/kali-rolling 3.1.3-1 all [upgradable from: 3.1.2-1]
+python3-pyperclip/kali-rolling 1.11.0-1 all [upgradable from: 1.8.2-2]
+python3-pyqt5.qtopengl/kali-rolling 5.15.11+dfsg-3 arm64 [upgradable from: 5.15.11+dfsg-2]
+python3-pyqt5.sip/kali-rolling 12.17.1-1 arm64 [upgradable from: 12.17.0-1+b1]
+python3-pyqt5/kali-rolling 5.15.11+dfsg-3 arm64 [upgradable from: 5.15.11+dfsg-2]
+python3-pyqt6.sip/kali-rolling 13.10.2-2 arm64 [upgradable from: 13.10.0-1+b1]
+python3-pyqt6/kali-rolling 6.10.0-1 arm64 [upgradable from: 6.9.0-2]
+python3-pyqtgraph/kali-rolling 0.13.7-6 all [upgradable from: 0.13.7-5]
+python3-pysmi/kali-rolling 0.3.4-4 all [upgradable from: 0.3.4-3]
+python3-pysnmp4/kali-rolling 7.1.21-2 all [upgradable from: 4.4.12-4]
+python3-pytest/kali-rolling 8.4.2-1 all [upgradable from: 8.3.5-2]
+python3-pytz/kali-rolling 2025.2-4 all [upgradable from: 2025.2-3]
+python3-qasync/kali-rolling 0.28.0-1 all [upgradable from: 0.27.1-4]
+python3-redis/kali-rolling 6.4.0-1 all [upgradable from: 6.1.0-2]
+python3-regex/kali-rolling 0.1.20250918-1 arm64 [upgradable from: 0.1.20241106-1+b1]
+python3-requests/kali-rolling 2.32.5+dfsg-1 all [upgradable from: 2.32.4+dfsg-1]
+python3-retrying/kali-rolling 1.4.2-2 all [upgradable from: 1.3.3-4]
+python3-rpds-py/kali-rolling 0.27.1-2 arm64 [upgradable from: 0.21.0-2+b1]
+python3-rq/kali-rolling 2.6-1 all [upgradable from: 2.3.3-2]
+python3-samba/kali-rolling 2:4.23.3+dfsg-1+b1 arm64 [upgradable from: 2:4.22.4+dfsg-1]
+python3-scipy/kali-rolling 1.16.3-1 arm64 [upgradable from: 1.15.3-1]
+python3-setproctitle/kali-rolling 1.3.7-1 arm64 [upgradable from: 1.3.6-2]
+python3-shodan/kali-rolling 1.31.0-2 all [upgradable from: 1.31.0-1]
+python3-six/kali-rolling 1.17.0-2 all [upgradable from: 1.17.0-1]
+python3-sqlalchemy-ext/kali-rolling 2.0.44+ds1-1 arm64 [upgradable from: 2.0.43+ds1-1]
+python3-sqlalchemy/kali-rolling 2.0.44+ds1-1 all [upgradable from: 2.0.43+ds1-1]
+python3-tables-lib/kali-rolling 3.10.2-3 arm64 [upgradable from: 3.10.2-2+b1]
+python3-tables/kali-rolling 3.10.2-3 all [upgradable from: 3.10.2-2]
+python3-talloc/kali-rolling 2:2.4.3+samba4.23.3+dfsg-1+b1 arm64 [upgradable from: 2:2.4.3+samba4.22.4+dfsg-1]
+python3-tdb/kali-rolling 2:1.4.14+samba4.23.3+dfsg-1+b1 arm64 [upgradable from: 2:1.4.13+samba4.22.4+dfsg-1]
+python3-tk/kali-rolling 3.13.9-1 arm64 [upgradable from: 3.13.5-1]
+python3-tornado/kali-rolling 6.5.2-3 arm64 [upgradable from: 6.4.2-3]
+python3-tqdm/kali-rolling 4.67.1-6 all [upgradable from: 4.67.1-5]
+python3-twisted/kali-rolling 25.5.0-4 all [upgradable from: 24.11.0-1]
+python3-txaio/kali-rolling 25.6.1-3 all [upgradable from: 23.1.1-4]
+python3-typeshed/kali-rolling 0.0~git20241223.ea91db2-4 all [upgradable from: 0.0~git20241223.ea91db2-3]
+python3-tz/kali-rolling 2025.2-4 all [upgradable from: 2025.2-3]
+python3-u-msgpack/kali-rolling 2.8.0-4 all [upgradable from: 2.8.0-2]
+python3-ujson/kali-rolling 5.11.0-2 arm64 [upgradable from: 5.10.0-1+b4]
+python3-unicodedata2/kali-rolling 16.0.0+ds-1 arm64 [upgradable from: 15.1.0+ds-1+b5]
+python3-uritemplate/kali-rolling 4.2.0-2 all [upgradable from: 4.1.1-3]
+python3-userpath/kali-rolling 1.9.2-2 all [upgradable from: 1.9.2-1]
+python3-venv/kali-rolling 3.13.7-1 arm64 [upgradable from: 3.13.5-1]
+python3-virtualenv/kali-rolling 20.35.4+ds-1 all [upgradable from: 20.34.0+ds-1]
+python3-watchdog/kali-rolling 6.0.0-3 all [upgradable from: 6.0.0-1]
+python3-webargs/kali-rolling 8.7.1-1 all [upgradable from: 8.7.0-1]
+python3-websockify/kali-rolling 0.13.0+dfsg1-2 arm64 [upgradable from: 0.12.0+dfsg1-4+b1]
+python3-wrapt/kali-rolling 1.17.3-2 arm64 [upgradable from: 1.15.0-4+b1]
+python3-xlrd/kali-rolling 2.0.2-2 all [upgradable from: 2.0.1-2]
+python3-yarl/kali-rolling 1.22.0-1 arm64 [upgradable from: 1.19.0-1]
+python3-zc.lockfile/kali-rolling 4.0-1 all [upgradable from: 3.0.post1-1]
+python3-zipp/kali-rolling 3.23.0-1 all [upgradable from: 3.21.0-1]
+python3-zope.deprecation/kali-rolling 6.0-2 all [upgradable from: 5.1-1]
+python3-zope.event/kali-rolling 6.0-2 all [upgradable from: 5.0-0.1]
+python3-zope.interface/kali-rolling 8.1-1 arm64 [upgradable from: 7.2-1+b1]
+python3-zopfli/kali-rolling 0.4.0-1 arm64 [upgradable from: 0.2.3.post1-1]
+python3-zstandard/kali-rolling 0.25.0-1 arm64 [upgradable from: 0.24.0-1]
+python3.13-dev/kali-rolling 3.13.9-1 arm64 [upgradable from: 3.13.7-1]
+python3.13-minimal/kali-rolling 3.13.9-1 arm64 [upgradable from: 3.13.7-1]
+python3.13-tk/kali-rolling 3.13.9-1 arm64 [upgradable from: 3.13.7-1]
+python3.13-venv/kali-rolling 3.13.9-1 arm64 [upgradable from: 3.13.7-1]
+python3.13/kali-rolling 3.13.9-1 arm64 [upgradable from: 3.13.7-1]
+python3/kali-rolling 3.13.7-1 arm64 [upgradable from: 3.13.5-1]
+----------------------------------------
+Starting upgrade...
+
+WARNING: apt does not have a stable CLI interface. Use with caution in scripts.
+
+Reading package lists...
+Building dependency tree...
+Reading state information...
+Calculating upgrade...
+The following packages were automatically installed and are no longer required:
+  amass-common             python3-git
+  dnsmap                   python3-gitdb
+  finger                   python3-gpg
+  gir1.2-girepository-2.0  python3-httpx-ntlm
+  imagemagick              python3-ipy
+  imagemagick-7.q16        python3-jeepney
+  libarmadillo14           python3-kismetcapturebtgeiger
+  libbluray2               python3-kismetcapturefreaklabszigbee
+  libbson-1.0-0t64         python3-kismetcapturertl433
+  libdisplay-info2         python3-kismetcapturertladsb
+  libgdal37                python3-kismetcapturertlamr
+  libgeos3.14.0            python3-nassl
+  libgirepository-1.0-1    python3-protobuf
+  libgpgmepp6t64           python3-pyexploitdb
+  libinstpatch-1.0-2       python3-pyfiglet
+  libjs-jquery-ui          python3-pyshodan
+  libjs-underscore         python3-pysmi
+  libmongoc-1.0-0t64       python3-pysnmp
+  libnet1                  python3-pysnmp4
+  libnfsidmap1             python3-qasync
+  libobjc-14-dev           python3-serial-asyncio
+  libplacebo349            python3-smmap
+  libportmidi0             python3-tld
+  libradare2-5.0.0t64      python3-tls-parser
+  librav1e0.7              python3-wapiti-arsenic
+  libsmb2-6                python3-wapiti-swagger
+  libsqlcipher1            python3-xlutils
+  libtheoradec1            python3-xlwt
+  libtheoraenc1            python3-yaswfp
+  libudfread0              python3-zombie-imp
+  libwireshark18           rpcbind
+  libwiretap15             rsh-redone-client
+  libwsutil16              samba-ad-dc
+  libx264-164              samba-ad-provision
+  libyelp0                 samba-dsdb-modules
+  medusa                   smtp-user-enum
+  polenum                  sparta-scripts
+  python3-aiocache         sslyze
+  python3-aiomcache        toilet-fonts
+  python3-ajpy             unicornscan
+  python3-bluepy           urlscan
+  python3-browser-cookie3  wapiti
+  python3-click-plugins
+Use 'sudo apt autoremove' to remove them.
+
+Upgrading:
+  7zip                                libqt5waylandclient5
+  accountsservice                     libqt5waylandcompositor5
+  adduser                             libqt5webchannel5
+  adwaita-icon-theme                  libqt5webengine-data
+  aircrack-ng                         libqt5webengine5
+  amass                               libqt5webenginecore5
+  apt                                 libqt5webenginewidgets5
+  apt-utils                           libqt5widgets5t64
+  arping                              libqt5xml5t64
+  aspell                              libqt6core5compat6
+  aspell-en                           libqt6core6t64
+  at-spi2-common                      libqt6dbus6
+  at-spi2-core                        libqt6gui6
+  atril                               libqt6multimedia6
+  atril-common                        libqt6network6
+  avahi-daemon                        libqt6opengl6
+  avahi-utils                         libqt6openglwidgets6
+  base-files                          libqt6printsupport6
+  base-passwd                         libqt6qml6
+  bash                                libqt6qmlmeta6
+  bash-completion                     libqt6qmlmodels6
+  bind9-dnsutils                      libqt6qmlworkerscript6
+  bind9-host                          libqt6quick6
+  bind9-libs                          libqt6sql6
+  binutils                            libqt6sql6-sqlite
+  binutils-aarch64-linux-gnu          libqt6svg6
+  binutils-common                     libqt6test6
+  binutils-mingw-w64-i686             libqt6waylandclient6
+  binutils-mingw-w64-x86-64           libqt6waylandcompositor6
+  binwalk3                            libqt6widgets6
+  bloodhound.py                       libqt6wlshellintegration6
+  bluez                               libqt6xml6
+  bluez-hcidump                       libradare2-common
+  bluez-obexd                         libradare2-dev
+  bsdextrautils                       libre2-11
+  bsdutils                            libreadline8t64
+  busybox                             librpm-sequoia-1
+  cadaver                             librpm10
+  chromium                            librpmbuild10
+  chromium-common                     librpmio10
+  chromium-sandbox                    librpmsign10
+  clang-18                            librsvg2-2
+  clang-19                            librsvg2-common
+  clang-tools-19                      libsane-common
+  colord                              libsane1
+  colord-data                         libsasl2-2
+  console-setup                       libsasl2-modules
+  console-setup-linux                 libsasl2-modules-db
+  coreboot-utils                      libsdl2-2.0-0
+  cpp                                 libsdl2-mixer-2.0-0
+  cpp-14                              libsdl3-0
+  cpp-14-aarch64-linux-gnu            libsecret-1-0
+  cpp-aarch64-linux-gnu               libsecret-common
+  cramfsswap                          libselinux1
+  cron                                libsemanage-common
+  cron-daemon-common                  libsemanage2
+  crunch                              libsepol2
+  cryptsetup-nuke-password            libserd-0-0
+  curl                                libsframe2
+  dconf-gsettings-backend             libshine3
+  dconf-service                       libsigc++-2.0-0v5
+  debugedit                           libsmartcols1
+  desktop-base                        libsmb2-6
+  dhcpcd-base                         libsmbclient0
+  dictionaries-common                 libsnappy1v5
+  diffutils                           libsndfile1
+  dirmngr                             libsord-0-0
+  distro-info-data                    libsoup-3.0-0
+  dmitry                              libsoup-3.0-common
+  dns2tcp                             libspa-0.2-bluetooth
+  dnsrecon                            libspa-0.2-modules
+  dracut-install                      libsqlite3-0
+  dsniff                              libsratom-0-0
+  easy-rsa                            libsrt1.5-gnutls
+  eject                               libssh-4
+  ettercap-common                     libssl3t64
+  ettercap-graphical                  libstdc++-14-dev
+  evil-winrm                          libstdc++6
+  evolution-data-server-common        libstrongswan
+  exfatprogs                          libstrongswan-standard-plugins
+  exiv2                               libsvn1
+  exploitdb                           libswresample5
+  faraday                             libswscale8
+  fdisk                               libsybdb5
+  firebird4.0-common                  libsyn123-0t64
+  firebird4.0-common-doc              libsystemd-shared
+  firefox-esr                         libsystemd0
+  firmware-ath9k-htc                  libtag-c2
+  firmware-carl9170                   libtag2
+  flac                                libtalloc2
+  fontconfig                          libtdb1
+  fontconfig-config                   libteamdctl0
+  fonts-freefont-ttf                  libtevent0t64
+  fonts-lyx                           libtext-csv-xs-perl
+  fonts-noto-color-emoji              libtext-iconv-perl
+  fonts-texgyre                       libtheora1
+  fonts-texgyre-math                  libtheoradec2
+  freerdp3-x11                        libtheoraenc2
+  freetds-common                      libthunarx-3-0
+  g++                                 libtiff6
+  g++-14                              libtsan2
+  g++-14-aarch64-linux-gnu            libubsan1
+  g++-aarch64-linux-gnu               libuchardet0
+  gcc                                 libudev1
+  gcc-14                              libudisks2-0
+  gcc-14-aarch64-linux-gnu            libunbound8
+  gcc-14-base                         liburcu8t64
+  gcc-15-base                         liburi-perl
+  gcc-aarch64-linux-gnu               liburing2
+  gcc-mingw-w64-base                  libusbmuxd-2.0-7
+  gcc-mingw-w64-i686-win32            libutf8proc3
+  gcc-mingw-w64-i686-win32-runtime    libuuid1
+  gcc-mingw-w64-x86-64-win32          libuv1-dev
+  gcc-mingw-w64-x86-64-win32-runtime  libuv1t64
+  gcr                                 libv4l-0t64
+  gcr4                                libv4lconvert0t64
+  gdal-data                           libvmdk1
+  gdal-plugins                        libvolume-key1
+  geoip-database                      libvte-2.91-0
+  gettext-base                        libvte-2.91-common
+  ghostscript                         libvulkan1
+  gir1.2-atk-1.0                      libwbclient0
+  gir1.2-atspi-2.0                    libwebkit2gtk-4.1-0
+  gir1.2-freedesktop                  libwebsockets19t64
+  gir1.2-gdkpixbuf-2.0                libwinpr3-3
+  gir1.2-girepository-2.0             libwireplumber-0.5-0
+  gir1.2-gstreamer-1.0                libwireshark-data
+  gir1.2-gtk-3.0                      libwmflite-0.2-7
+  gir1.2-harfbuzz-0.0                 libwnck-3-0
+  gir1.2-libxfce4ui-2.0               libwnck-3-common
+  gir1.2-nm-1.0                       libwoff1
+  gir1.2-packagekitglib-1.0           libwtmpdb0
+  gir1.2-pango-1.0                    libwww-mechanize-perl
+  gir1.2-secret-1                     libwww-perl
+  gir1.2-vte-2.91                     libx265-215
+  gir1.2-wnck-3.0                     libxfce4panel-2.0-4
+  gnome-accessibility-themes          libxfce4ui-2-0
+  gnome-icon-theme                    libxfce4ui-common
+  gnome-keyring                       libxfce4ui-utils
+  gnome-keyring-pkcs11                libxfce4windowing-0-0
+  gnome-themes-extra                  libxfce4windowing-common
+  gnome-themes-extra-data             libxkbcommon-x11-0
+  gnupg                               libxkbcommon0
+  gnupg-l10n                          libxklavier16
+  gnupg-utils                         libxml2-16
+  gnutls-bin                          libxml2-dev
+  gpg                                 libxml2-utils
+  gpg-agent                           libxmlsec1-1
+  gpg-wks-client                      libxmlsec1-openssl1
+  gpgconf                             libxslt1.1
+  gpgsm                               libxt-dev
+  gpgv                                libxt6t64
+  greenbone-feed-sync                 libxv1
+  grep                                libxxf86vm1
+  gsettings-desktop-schemas           libyuv0
+  gstreamer1.0-gl                     libzix-0-0
+  gstreamer1.0-libav                  libzstd1
+  gstreamer1.0-plugins-bad            libzzip-0-13t64
+  gstreamer1.0-plugins-base           linux-image-arm64
+  gstreamer1.0-plugins-good           linux-libc-dev
+  gstreamer1.0-x                      llvm-18
+  gtk2-engines-pixbuf                 llvm-18-dev
+  gvfs                                llvm-18-linker-tools
+  gvfs-backends                       llvm-18-runtime
+  gvfs-common                         llvm-18-tools
+  gvfs-daemons                        llvm-19
+  gvfs-fuse                           llvm-19-dev
+  gvfs-libs                           llvm-19-linker-tools
+  gvmd                                llvm-19-runtime
+  gvmd-common                         llvm-19-tools
+  hashcat                             llvm-spirv-18
+  hashcat-data                        login
+  hwloc                               login.defs
+  hydra                               lrzsz
+  iio-sensor-proxy                    lsb-release
+  imagemagick                         luit
+  imagemagick-7-common                m4
+  imagemagick-7.q16                   make
+  initramfs-tools                     manpages
+  initramfs-tools-bin                 manpages-dev
+  initramfs-tools-core                mate-calc
+  iodine                              mate-calc-common
+  iproute2                            mate-polkit
+  ipython3                            mate-polkit-common
+  iso-codes                           media-types
+  iw                                  medusa
+  kali-defaults                       mesa-libgallium
+  kali-defaults-desktop               mesa-va-drivers
+  kali-desktop-base                   mesa-vdpau-drivers
+  kali-desktop-core                   mesa-vulkan-drivers
+  kali-desktop-xfce                   metasploit-framework
+  kali-linux-firmware                 mingw-w64-common
+  kali-menu                           mingw-w64-i686-dev
+  kali-themes                         mingw-w64-x86-64-dev
+  kali-themes-common                  mitmproxy
+  kali-tools-top10                    mobile-broadband-provider-info
+  kali-tweaks                         modemmanager
+  kali-undercover                     mount
+  keyboard-configuration              mousepad
+  kismet                              mpg123
+  kismet-capture-common               mupdf-tools
+  kismet-capture-hak5-wifi-coconut    nasm
+  kismet-capture-linux-bluetooth      ncompress
+  kismet-capture-linux-wifi           net-tools
+  kismet-capture-nrf-51822            netcat-traditional
+  kismet-capture-nrf-52840            netpbm
+  kismet-capture-nrf-mousejack        netsniff-ng
+  kismet-capture-nxp-kw41z            network-manager
+  kismet-capture-rz-killerbee         network-manager-l10n
+  kismet-capture-ti-cc-2531           network-manager-openconnect
+  kismet-capture-ti-cc-2540           network-manager-openconnect-gnome
+  kismet-capture-ubertooth-one        nftables
+  kismet-core                         nginx
+  kismet-logtools                     nginx-common
+  krb5-locales                        ngrep
+  krb5-multidev                       node-popper2
+  layer-shell-qt                      node-undici
+  libaccountsservice0                 nodejs
+  libafflib0t64                       nodejs-doc
+  libaom3                             ocl-icd-libopencl1
+  libapr1t64                          offsec-awae-python2
+  libaprutil1-dbd-sqlite3             onboard
+  libaprutil1-ldap                    onboard-common
+  libaprutil1t64                      onboard-data
+  libapt-pkg7.0                       openconnect
+  libasan8                            openjdk-21-jre
+  libasound2-data                     openjdk-21-jre-headless
+  libasound2t64                       opensc
+  libaspell15                         opensc-pkcs11
+  libasyncns0                         openssh-client
+  libatk-bridge2.0-0t64               openssh-client-gssapi
+  libatk-wrapper-java                 openssh-server
+  libatk-wrapper-java-jni             openssh-sftp-server
+  libatk1.0-0t64                      openssl
+  libatomic1                          openssl-provider-legacy
+  libatrildocument3t64                openvas-scanner
+  libatrilview3t64                    openvpn
+  libatspi2.0-0t64                    orca
+  libavahi-client3                    ospd-openvas
+  libavahi-common-data                p11-kit
+  libavahi-common3                    p11-kit-modules
+  libavahi-core7                      parole
+  libavahi-glib1                      parted
+  libavcodec61                        passwd
+  libavfilter10                       pci.ids
+  libavformat61                       pcscd
+  libavif16                           pdf-parser
+  libavutil59                         peass
+  libayatana-indicator3-7             pipewire
+  libbinutils                         pipewire-bin
+  libbit-vector-perl                  pipewire-pulse
+  libblas3                            pipx
+  libblkid1                           pocl-opencl-icd
+  libblockdev-crypto3                 polenum
+  libblockdev-fs3                     postgresql
+  libblockdev-loop3                   postgresql-client-common
+  libblockdev-mdraid3                 postgresql-common
+  libblockdev-nvme3                   powershell-empire
+  libblockdev-part3                   ppp
+  libblockdev-smart3                  proj-bin
+  libblockdev-swap3                   proj-data
+  libblockdev-utils3                  ptunnel
+  libblockdev3                        publicsuffix
+  libblosc1                           pv
+  libblosc2-4                         pyinstaller
+  libbluetooth3                       pyinstaller-hooks-contrib
+  libbrlapi0.8                        pyqt5-dev-tools
+  libbtbb1                            pyqt6-dev-tools
+  libcaca0                            python-matplotlib-data
+  libcaja-extension1                  python-tables-data
+  libcamel-1.2-64t64                  python3
+  libcbor0.10                         python3-aesedb
+  libcc1-0                            python3-aiodns
+  libccid                             python3-aiofiles
+  libcfitsio10t64                     python3-aiohappyeyeballs
+  libcgi-pm-perl                      python3-aiohttp
+  libcharon-extauth-plugins           python3-alembic
+  libchromaprint1                     python3-altgraph
+  libcjson1                           python3-amqp
+  libclang-common-18-dev              python3-anyio
+  libclang-common-19-dev              python3-apispec
+  libclang-cpp18                      python3-argcomplete
+  libclang-cpp19                      python3-asgiref
+  libclang-rt-18-dev                  python3-attr
+  libclang-rt-19-dev                  python3-autobahn
+  libclang1-18                        python3-bcrypt
+  libclang1-19                        python3-billiard
+  libcli1.10t64                       python3-bitstruct
+  libcloudproviders0                  python3-brlapi
+  libcodec2-1.2                       python3-bs4
+  libcolord2                          python3-celery
+  libcolorhug2                        python3-censys
+  libcompress-raw-lzma-perl           python3-certifi
+  libconfig-inifiles-perl             python3-cffi
+  libcpuinfo0                         python3-cffi-backend
+  libcrypt-dev                        python3-croniter
+  libcrypt1                           python3-cryptography
+  libct4                              python3-cups
+  libctf-nobfd0                       python3-deprecated
+  libctf0                             python3-dev
+  libcups2t64                         python3-django
+  libcurl3t64-gnutls                  python3-docx
+  libcurl4t64                         python3-elastic-transport
+  libdate-calc-xs-perl                python3-elasticsearch
+  libdav1d7                           python3-fastapi
+  libdb5.3t64                         python3-feedparser
+  libdbus-glib-1-2                    python3-filelock
+  libdc1394-25                        python3-flask
+  libdconf1                           python3-flask-limiter
+  libdebconfclient0                   python3-flask-restful
+  libdecor-0-0                        python3-fonttools
+  libdjvulibre-text                   python3-frozenlist
+  libdjvulibre21                      python3-fs
+  libdlt2                             python3-gdal
+  libdnnl3.6                          python3-git
+  libdouble-conversion3               python3-gpg
+  libdrm-amdgpu1                      python3-greenlet
+  libdrm-common                       python3-gssapi
+  libdrm-nouveau2                     python3-gvm
+  libdrm-radeon1                      python3-h2
+  libdrm2                             python3-httpcore
+  libdw1t64                           python3-hyperframe
+  libebackend-1.2-11t64               python3-impacket
+  libebook-1.2-21t64                  python3-inflect
+  libebook-contacts-1.2-4t64          python3-iniconfig
+  libebur128-1                        python3-ipython
+  libedata-book-1.2-27t64             python3-jsonschema
+  libedataserver-1.2-27t64            python3-kaitaistruct
+  libegl-mesa0                        python3-kismetcapturefreaklabszigbee
+  libelf1t64                          python3-kismetcapturertl433
+  libevdev2                           python3-kismetcapturertladsb
+  libewf2                             python3-kiwisolver
+  libexiv2-28                         python3-kombu
+  libexiv2-data                       python3-ldb
+  libexpat1                           python3-legacy-cgi
+  libexpat1-dev                       python3-louis
+  libfbclient2                        python3-lxml
+  libfdisk1                           python3-lz4
+  libffi-dev                          python3-mako
+  libffi8                             python3-markdown
+  libflac14                           python3-markdown2
+  libfluidsynth3                      python3-markupsafe
+  libfontconfig1                      python3-matplotlib
+  libfreerdp-client3-3                python3-mechanize
+  libfreerdp3-3                       python3-minimal
+  libfribidi0                         python3-mistune
+  libftdi1-2                          python3-more-itertools
+  libgbm1                             python3-mpmath
+  libgc1                              python3-multipart
+  libgcc-14-dev                       python3-nacl
+  libgcc-s1                           python3-networkx
+  libgck-1-0                          python3-numexpr
+  libgck-2-2                          python3-numpy
+  libgcr-4-4                          python3-numpy-dev
+  libgcr-base-3-1                     python3-openpyxl
+  libgcr-ui-3-1                       python3-openssl
+  libgcrypt20                         python3-pandas
+  libgdk-pixbuf-2.0-0                 python3-pandas-lib
+  libgdk-pixbuf2.0-bin                python3-paramiko
+  libgdk-pixbuf2.0-common             python3-parso
+  libgeos-c1t64                       python3-pastedeploy
+  libgfortran5                        python3-pastedeploy-tpl
+  libgirepository-1.0-1               python3-pil
+  libgl1-mesa-dri                     python3-pil.imagetk
+  libglibmm-2.4-1t64                  python3-platformdirs
+  libglibmm-2.68-1t64                 python3-png
+  libglut-dev                         python3-prettytable
+  libglut3.12                         python3-prompt-toolkit
+  libglx-mesa0                        python3-protobuf
+  libgme0                             python3-psutil
+  libgmp-dev                          python3-psycopg
+  libgmp10                            python3-psycopg-c
+  libgmpxx4ldbl                       python3-pycares
+  libgnutls-dane0t64                  python3-pycparser
+  libgnutls30t64                      python3-pycurl
+  libgoa-1.0-0b                       python3-pydantic
+  libgoa-1.0-common                   python3-pydantic-core
+  libgomp1                            python3-pyexploitdb
+  libgpg-error-l10n                   python3-pygame
+  libgpg-error0                       python3-pyinstaller
+  libgphoto2-6t64                     python3-pymssql
+  libgphoto2-l10n                     python3-pyparsing
+  libgphoto2-port12t64                python3-pyperclip
+  libgpm2                             python3-pyqt5
+  libgprofng0                         python3-pyqt5.qtopengl
+  libgraphite2-3                      python3-pyqt5.sip
+  libgs-common                        python3-pyqt6
+  libgs10                             python3-pyqt6.sip
+  libgs10-common                      python3-pyqtgraph
+  libgsm1                             python3-pysmi
+  libgspell-1-3                       python3-pysnmp4
+  libgspell-1-common                  python3-pytest
+  libgssapi-krb5-2                    python3-pytz
+  libgssrpc4t64                       python3-qasync
+  libgstreamer-gl1.0-0                python3-redis
+  libgstreamer-plugins-bad1.0-0       python3-regex
+  libgstreamer-plugins-base1.0-0      python3-requests
+  libgstreamer1.0-0                   python3-retrying
+  libgtk-3-0t64                       python3-rpds-py
+  libgtk-3-bin                        python3-rq
+  libgtk-3-common                     python3-samba
+  libgtk-layer-shell0                 python3-scipy
+  libgtkmm-4.0-0                      python3-setproctitle
+  libgtksourceview-4-0                python3-shodan
+  libgtksourceview-4-common           python3-six
+  libgtop-2.0-11                      python3-sqlalchemy
+  libgtop2-common                     python3-sqlalchemy-ext
+  libgudev-1.0-0                      python3-tables
+  libgupnp-1.6-0                      python3-tables-lib
+  libgupnp-igd-1.6-0                  python3-talloc
+  libgusb2                            python3-tdb
+  libgvm22t64                         python3-tk
+  libgxps2t64                         python3-tornado
+  libharfbuzz-gobject0                python3-tqdm
+  libharfbuzz-icu0                    python3-twisted
+  libharfbuzz-subset0                 python3-txaio
+  libharfbuzz0b                       python3-typeshed
+  libhdf5-310                         python3-tz
+  libhdf5-hl-310                      python3-u-msgpack
+  libheif-plugin-aomenc               python3-ujson
+  libheif-plugin-dav1d                python3-unicodedata2
+  libheif-plugin-libde265             python3-uritemplate
+  libheif-plugin-x265                 python3-userpath
+  libheif1                            python3-venv
+  libhogweed6t64                      python3-virtualenv
+  libhtml-form-perl                   python3-watchdog
+  libhttp-message-perl                python3-webargs
+  libhwasan0                          python3-websockify
+  libhwloc-plugins                    python3-wrapt
+  libhwloc15                          python3-xlrd
+  libhwy1t64                          python3-yarl
+  libical3t64                         python3-zc.lockfile
+  libijs-0.35                         python3-zipp
+  libimage-exiftool-perl              python3-zope.deprecation
+  libimobiledevice-1.0-6              python3-zope.event
+  libinstpatch-1.0-2                  python3-zope.interface
+  libitm1                             python3-zopfli
+  libjavascriptcoregtk-4.1-0          python3-zstandard
+  libjq1                              python3.13
+  libjs-jquery                        python3.13-dev
+  libjs-sphinxdoc                     python3.13-minimal
+  libjson-c5                          python3.13-tk
+  libjson-glib-1.0-0                  python3.13-venv
+  libjson-glib-1.0-common             qemu-guest-agent
+  libjson-xs-perl                     qt5-gtk-platformtheme
+  libjudydebian1                      qt5ct
+  libjxl0.11                          qt6-base-dev-tools
+  libk5crypto3                        qt6-gtk-platformtheme
+  libkadm5clnt-mit12                  qt6-qpa-plugins
+  libkadm5srv-mit12                   qt6-svg-plugins
+  libkdb5-10t64                       qt6-translations-l10n
+  libkmlbase1t64                      qt6-wayland
+  libkmldom1t64                       qt6ct
+  libkmlengine1t64                    qtbase5-dev-tools
+  libkrb5-3                           qttranslations5-l10n
+  libkrb5-dev                         qtwayland5
+  libkrb5support0                     racc
+  liblapack3                          radare2
+  liblastlog2-2                       read-edid
+  liblayershellqtinterface6           readline-common
+  liblcms2-2                          rebind
+  libldb2                             recon-ng
+  libllvm18                           redis-server
+  libllvm19                           redis-tools
+  libllvmspirvlib18.1                 rfkill
+  liblouis-data                       rpm
+  liblouis20                          rpm-common
+  liblsan0                            rpm2cpio
+  libltdl7                            rsync
+  liblz4-1                            ruby-activesupport
+  liblz4-dev                          ruby-base64
+  liblzma-dev                         ruby-connection-pool
+  liblzma5                            ruby-erubi
+  libmagickcore-7.q16-10              ruby-ffi
+  libmagickcore-7.q16-10-extra        ruby-gssapi
+  libmagickwand-7.q16-10              ruby-http-cookie
+  libmanette-0.2-0                    ruby-httpclient
+  libmbedcrypto16                     ruby-json
+  libmbim-glib4                       ruby-logging
+  libmbim-proxy                       ruby-mime-types-data
+  libmbim-utils                       ruby-mini-portile2
+  libmm-glib0                         ruby-nokogiri
+  libmongocrypt0                      ruby-nori
+  libmount1                           ruby-ntlm
+  libmousepad0                        ruby-oj
+  libmpc3                             ruby-public-suffix
+  libmpfr6                            ruby-rchardet
+  libmpg123-0t64                      ruby-snmp
+  libmuparser2v5                      ruby-unf-ext
+  libmupdf25.1                        ruby-winrm
+  libnet-cidr-perl                    samba
+  libnet-dns-perl                     samba-ad-dc
+  libnet-http-perl                    samba-ad-provision
+  libnet-netmask-perl                 samba-common
+  libnetpbm11t64                      samba-common-bin
+  libnettle8t64                       samba-dsdb-modules
+  libnfsidmap1                        samba-libs
+  libnftables1                        sane-utils
+  libnghttp3-9                        scalpel
+  libngtcp2-16                        smartmontools
+  libngtcp2-crypto-gnutls8            smbclient
+  libnids1.21t64                      sound-theme-freedesktop
+  libnl-3-200                         sqlite3
+  libnl-genl-3-200                    sqlitebrowser
+  libnl-route-3-200                   sqlmap
+  libnm0                              squashfs-tools
+  libnode115                          ssldump
+  libnorm1t64                         sslsplit
+  libnspr4                            sslyze
+  libnss-mdns                         starkiller
+  libnss-systemd                      strongswan-charon
+  libnss-winbind                      strongswan-libcharon
+  libnss3                             strongswan-starter
+  libnvme1t64                         stunnel4
+  libobjc-14-dev                      subversion
+  libobjc4                            systemd
+  libodbc2                            systemd-sysv
+  libodbccr2                          sysvinit-utils
+  libodbcinst2                        tasksel
+  libogg0                             tasksel-data
+  libonig5                            tcpick
+  libonnxruntime1.21                  tcpreplay
+  liboobs-1-5                         tdb-tools
+  libopenconnect5                     tex-gyre
+  libopenmpt0t64                      texlive-base
+  libout123-0t64                      texlive-fonts-recommended
+  libp11-kit0                         texlive-latex-base
+  libpackagekit-glib2-18              texlive-latex-extra
+  libpam-gnome-keyring                texlive-latex-recommended
+  libpam-systemd                      texlive-pictures
+  libpam-winbind                      texlive-plain-generic
+  libpango-1.0-0                      tftp-hpa
+  libpangocairo-1.0-0                 thc-ipv6
+  libpangoft2-1.0-0                   thunar
+  libpangoxft-1.0-0                   thunar-data
+  libparted-fs-resize0t64             toilet-fonts
+  libparted2t64                       tree
+  libpcre2-16-0                       tshark
+  libpcre2-8-0                        udev
+  libpcre2-posix3                     udisks2
+  libpcsclite1                        unicode-data
+  libpipeline1                        unixodbc-common
+  libpipewire-0.3-0t64                unrar
+  libpipewire-0.3-common              usb-modeswitch
+  libpipewire-0.3-modules             usb.ids
+  libpixman-1-0                       usbutils
+  libpkcs11-helper1t64                user-session-migration
+  libplist-2.0-4                      util-linux
+  libpocl2-common                     uuid-dev
+  libpocl2t64                         vim
+  libpoppler-glib8t64                 vim-common
+  libpoppler147                       vim-runtime
+  libportaudio2                       vim-tiny
+  libpostproc58                       wapiti
+  libpq5                              whatweb
+  libproj25                           whois
+  libprotobuf32t64                    winbind
+  libproxy1v5                         wireless-regdb
+  libpython3-dev                      wireplumber
+  libpython3-stdlib                   wireshark
+  libpython3.13                       wireshark-common
+  libpython3.13-dev                   wordlists
+  libpython3.13-minimal               wpasupplicant
+  libpython3.13-stdlib                x11-common
+  libqhull-r8.0                       xbrlapi
+  libqmi-glib5                        xdg-dbus-proxy
+  libqmi-proxy                        xdg-desktop-portal-gtk
+  libqmi-utils                        xdg-user-dirs
+  libqrtr-glib0                       xdg-user-dirs-gtk
+  libqscintilla2-qt5-15               xfce4-panel
+  libqscintilla2-qt5-l10n             xfce4-pulseaudio-plugin
+  libqt5charts5                       xorg
+  libqt5core5t64                      xserver-common
+  libqt5dbus5t64                      xserver-xephyr
+  libqt5designer5                     xserver-xorg
+  libqt5gui5t64                       xserver-xorg-core
+  libqt5help5                         xserver-xorg-input-all
+  libqt5network5t64                   xserver-xorg-legacy
+  libqt5opengl5t64                    xserver-xorg-video-all
+  libqt5positioning5                  xserver-xorg-video-amdgpu
+  libqt5printsupport5t64              xsltproc
+  libqt5qml5                          xtrans-dev
+  libqt5qmlmodels5                    xvfb
+  libqt5quick5                        xxd
+  libqt5quickwidgets5                 xz-utils
+  libqt5sql5-sqlite                   yelp
+  libqt5sql5t64                       yelp-xsl
+  libqt5svg5                          zstd
+  libqt5test5t64
+
+Installing dependencies:
+  cpp-15                           librav1e0.8
+  cpp-15-aarch64-linux-gnu         libsdl2-classic
+  dconf-cli                        libsimdutf27
+  g++-15                           libsqlcipher2
+  g++-15-aarch64-linux-gnu         libstdc++-15-dev
+  gcc-15                           libsuperlu7
+  gcc-15-aarch64-linux-gnu         libtbb12
+  kismet-capture-antsdr-droneid    libtbbbind-2-5
+  kismet-capture-freaklabs-zigbee  libtbbmalloc2
+  kismet-capture-radiacode-usb     libudfread3
+  kismet-capture-rtl433            libwebkitgtk-6.0-4
+  kismet-capture-rtladsb           libwireshark19
+  kismet-capture-serial-radview    libwiretap16
+  libarmadillo15                   libwsutil17
+  libbluray3                       libx264-165
+  libbson2-2                       libyelp-1-0
+  libdisplay-info3                 linux-image-6.16.8+kali-arm64
+  libfalcosecurity0t64             node-debug
+  libgcc-15-dev                    node-llhttp
+  libgdal38                        node-lru-cache
+  libgeos3.14.1                    node-ms
+  libgpgme45                       node-semver
+  libgpgmepp7                      postgresql-18
+  libgrpc++1.51t64                 postgresql-18-jit
+  libgrpc29t64                     postgresql-18-pg-gvm
+  libio-pty-perl                   postgresql-client-18
+  libipc-run-perl                  postgresql-common-dev
+  libjavascriptcoregtk-6.0-1       python3-aiocache
+  libjsoncpp26                     python3-aiomcache
+  libllhttp9.3                     python3-browser-cookie3
+  libmate-desktop-2-17t64          python3-dasbus
+  libmongoc2-2                     python3-httpx-ntlm
+  libnet9                          python3-jeepney
+  libngtcp2-crypto-ossl0           python3-loguru
+  libobjc-15-dev                   python3-pysnmp
+  libonnxruntime-providers         python3-typing-inspection
+  libplacebo351                    python3-wapiti-arsenic
+  libportmidi2                     python3-wapiti-swagger
+  libpostal-data                   texlive-luatex
+  libpostal1                       util-linux-extra
+  libprotoc32t64                   xfce4-eyes-plugin
+  libradare2-6.0.0t64
+
+Suggested packages:
+  gcc-15-locales  libstdc++-15-doc   debian-kernel-handbook
+  cpp-15-doc      gstreamer1.0-alsa  postgresql-doc-18
+  gcc-15-doc      wireshark-doc
+  libbluray-bdj   linux-doc-6.16
+
+Summary:
+  Upgrading: 1177, Installing: 83, Removing: 0, Not Upgrading: 0
+  Download size: 2,173 MB
+  Space needed: 1,348 MB / 45.6 GB available
+
+Get:1 https://mirrors.esto.network/kali kali-rolling/main arm64 base-files arm64 1:2025.4.0 [76.9 kB]
+Get:3 https://kali.download/kali kali-rolling/main arm64 diffutils arm64 1:3.12-1 [397 kB]
+Get:4 https://kali.download/kali kali-rolling/main arm64 grep arm64 3.12-1 [440 kB]
+Get:7 https://kali.download/kali kali-rolling/main arm64 libfdisk1 arm64 2.41.2-4 [200 kB]
+Get:8 https://kali.download/kali kali-rolling/main arm64 libblkid1 arm64 2.41.2-4 [167 kB]
+Get:2 https://mirrors.esto.network/kali kali-rolling/main arm64 bash arm64 5.3-1 [1,507 kB]
+Get:10 https://kali.download/kali kali-rolling/main arm64 libsmartcols1 arm64 2.41.2-4 [139 kB]
+Get:11 https://kali.download/kali kali-rolling/main arm64 libuuid1 arm64 2.41.2-4 [37.8 kB]
+Get:12 https://kali.download/kali kali-rolling/main arm64 bsdutils arm64 1:2.41.2-4 [92.8 kB]
+Get:13 https://kali.download/kali kali-rolling/main arm64 util-linux arm64 2.41.2-4 [1,121 kB]
+Get:15 https://kali.download/kali kali-rolling/main arm64 rfkill arm64 2.41.2-4 [47.3 kB]
+Get:16 https://kali.download/kali kali-rolling/main arm64 fdisk arm64 2.41.2-4 [155 kB]
+Get:17 https://kali.download/kali kali-rolling/main arm64 mount arm64 2.41.2-4 [161 kB]
+Get:18 https://kali.download/kali kali-rolling/main arm64 readline-common all 8.3-3 [74.8 kB]
+Get:5 https://mirrors.esto.network/kali kali-rolling/main arm64 eject arm64 2.41.2-4 [63.9 kB]
+Get:6 https://mirrors.esto.network/kali kali-rolling/main arm64 uuid-dev arm64 2.41.2-4 [49.8 kB]
+Get:9 https://mirrors.esto.network/kali kali-rolling/main arm64 libmount1 arm64 2.41.2-4 [199 kB]
+Get:14 https://mirrors.esto.network/kali kali-rolling/main arm64 bsdextrautils arm64 2.41.2-4 [97.3 kB]
+Get:19 https://mirrors.esto.network/kali kali-rolling/main arm64 libreadline8t64 arm64 8.3-3 [169 kB]
+Get:20 https://mirrors.esto.network/kali kali-rolling/main arm64 libpcre2-8-0 arm64 10.46-1 [262 kB]
+Get:23 https://kali.download/kali kali-rolling/main arm64 xserver-common all 2:21.1.20-1 [2,434 kB]
+Get:21 https://mirrors.esto.network/kali kali-rolling/main arm64 libselinux1 arm64 3.9-2 [80.1 kB]
+Get:24 https://kali.download/kali kali-rolling/main arm64 xserver-xorg-legacy arm64 2:21.1.20-1 [2,439 kB]
+Get:22 https://http.kali.org/kali kali-rolling/main arm64 libsystemd0 arm64 259~rc1-1 [428 kB]
+Get:25 https://kali.download/kali kali-rolling/main arm64 xserver-xorg-core arm64 2:21.1.20-1 [3,685 kB]
+Get:28 https://http.kali.org/kali kali-rolling/main arm64 libpam-systemd arm64 259~rc1-1 [288 kB]
+Get:26 https://http.kali.org/kali kali-rolling/main arm64 libnss-systemd arm64 259~rc1-1 [211 kB]
+Get:27 https://http.kali.org/kali kali-rolling/main arm64 systemd-sysv arm64 259~rc1-1 [64.3 kB]
+Get:29 https://http.kali.org/kali kali-rolling/main arm64 libsystemd-shared arm64 259~rc1-1 [2,085 kB]
+Get:30 https://http.kali.org/kali kali-rolling/main arm64 systemd arm64 259~rc1-1 [3,065 kB]
+Get:31 https://http.kali.org/kali kali-rolling/main arm64 udev arm64 259~rc1-1 [1,412 kB]
+Get:32 https://http.kali.org/kali kali-rolling/main arm64 libudev1 arm64 259~rc1-1 [147 kB]
+Get:33 https://kali.download/kali kali-rolling/main arm64 libcrypt-dev arm64 1:4.5.1-1 [126 kB]
+Get:34 https://kali.download/kali kali-rolling/main arm64 libcrypt1 arm64 1:4.5.1-1 [93.9 kB]
+Get:35 https://kali.download/kali kali-rolling/main arm64 openssl-provider-legacy arm64 3.5.4-1 [306 kB]
+Get:36 https://http.kali.org/kali kali-rolling/main arm64 libzstd1 arm64 1.5.7+dfsg-2 [260 kB]
+Get:37 https://kali.download/kali kali-rolling/main arm64 libssl3t64 arm64 3.5.4-1 [2,725 kB]
+Get:38 https://kali.download/kali kali-rolling/main arm64 console-setup-linux all 1.244 [6,207 kB]
+Get:39 https://mirrors.esto.network/kali kali-rolling/main arm64 console-setup all 1.244 [97.9 kB]
+Get:40 https://kali.download/kali kali-rolling/main arm64 keyboard-configuration all 1.244 [413 kB]
+Get:41 https://kali.download/kali kali-rolling/main arm64 sysvinit-utils arm64 3.15-6 [34.9 kB]
+Get:42 https://http.kali.org/kali kali-rolling/main arm64 x11-common all 1:7.7+26 [217 kB]
+Get:43 https://kali.download/kali kali-rolling/main arm64 libdrm-common all 2.4.127-1 [9,060 B]
+Get:44 https://kali.download/kali kali-rolling/main arm64 libdrm2 arm64 2.4.127-1 [38.3 kB]
+Get:45 https://kali.download/kali kali-rolling/main arm64 libexpat1-dev arm64 2.7.3-1 [150 kB]
+Get:47 https://mirrors.esto.network/kali kali-rolling/main arm64 libegl-mesa0 arm64 25.2.6-1 [115 kB]
+Get:46 https://kali.download/kali kali-rolling/main arm64 libexpat1 arm64 2.7.3-1 [96.5 kB]
+Get:48 https://mirrors.esto.network/kali kali-rolling/main arm64 mesa-va-drivers arm64 25.2.6-1 [20.6 kB]
+Get:50 https://kali.download/kali kali-rolling/main arm64 libvulkan1 arm64 1.4.328.1-1 [139 kB]
+Get:49 https://mirrors.esto.network/kali kali-rolling/main arm64 libxxf86vm1 arm64 1:1.1.4-2 [19.5 kB]
+Get:51 https://kali.download/kali kali-rolling/main arm64 libgl1-mesa-dri arm64 25.2.6-1 [46.9 kB]
+Get:52 https://kali.download/kali kali-rolling/main arm64 libglx-mesa0 arm64 25.2.6-1 [108 kB]
+Get:53 https://kali.download/kali kali-rolling/main arm64 libdrm-amdgpu1 arm64 2.4.127-1 [22.7 kB]
+Get:54 https://kali.download/kali kali-rolling/main arm64 liblzma-dev arm64 5.8.1-2 [344 kB]
+Get:55 https://kali.download/kali kali-rolling/main arm64 liblzma5 arm64 5.8.1-2 [302 kB]
+Get:56 https://kali.download/kali kali-rolling/main arm64 libdw1t64 arm64 0.194-1 [247 kB]
+Get:57 https://kali.download/kali kali-rolling/main arm64 libelf1t64 arm64 0.194-1 [184 kB]
+Get:58 https://kali.download/kali kali-rolling/main arm64 libasan8 arm64 15.2.0-7 [2,601 kB]
+Get:59 https://kali.download/kali kali-rolling/main arm64 libubsan1 arm64 15.2.0-7 [1,064 kB]
+Get:62 https://http.kali.org/kali kali-rolling/main arm64 g++-14 arm64 14.3.0-10 [28.4 kB]
+Get:64 https://kali.download/kali kali-rolling/main arm64 gcc-14-aarch64-linux-gnu arm64 14.3.0-10 [17.7 MB]
+Get:60 https://http.kali.org/kali kali-rolling/main arm64 libstdc++-14-dev arm64 14.3.0-10 [2,568 kB]
+Get:61 https://mirrors.esto.network/kali kali-rolling/main arm64 gcc-14 arm64 14.3.0-10 [546 kB]
+Get:63 https://http.kali.org/kali kali-rolling/main arm64 g++-14-aarch64-linux-gnu arm64 14.3.0-10 [10.1 MB]
+Get:65 https://kali.download/kali kali-rolling/main arm64 cpp-14-aarch64-linux-gnu arm64 14.3.0-10 [9,171 kB]
+Get:66 https://kali.download/kali kali-rolling/main arm64 cpp-14 arm64 14.3.0-10 [1,276 B]
+Get:67 https://mirrors.esto.network/kali kali-rolling/main arm64 libobjc-14-dev arm64 14.3.0-10 [166 kB]
+Get:68 https://kali.download/kali kali-rolling/main arm64 gcc-14-base arm64 14.3.0-10 [52.4 kB]
+Get:69 https://kali.download/kali kali-rolling/main arm64 libgcc-14-dev arm64 14.3.0-10 [2,366 kB]
+Get:70 https://kali.download/kali kali-rolling/main arm64 libtsan2 arm64 15.2.0-7 [2,401 kB]
+Get:73 https://mirrors.esto.network/kali kali-rolling/main arm64 libitm1 arm64 15.2.0-7 [24.2 kB]
+Get:75 https://mirrors.esto.network/kali kali-rolling/main arm64 libgomp1 arm64 15.2.0-7 [126 kB]
+Get:71 https://kali.download/kali kali-rolling/main arm64 libobjc4 arm64 15.2.0-7 [39.7 kB]
+Get:72 https://kali.download/kali kali-rolling/main arm64 liblsan0 arm64 15.2.0-7 [1,194 kB]
+Get:74 https://kali.download/kali kali-rolling/main arm64 libhwasan0 arm64 15.2.0-7 [1,480 kB]
+Get:76 https://kali.download/kali kali-rolling/main arm64 libgfortran5 arm64 15.2.0-7 [371 kB]
+Get:77 https://kali.download/kali kali-rolling/main arm64 gcc-15-base arm64 15.2.0-7 [53.3 kB]
+Get:78 https://kali.download/kali kali-rolling/main arm64 libgcc-s1 arm64 15.2.0-7 [53.5 kB]
+Get:79 https://kali.download/kali kali-rolling/main arm64 libcc1-0 arm64 15.2.0-7 [41.3 kB]
+Get:80 https://kali.download/kali kali-rolling/main arm64 libatomic1 arm64 15.2.0-7 [9,940 B]
+Get:81 https://http.kali.org/kali kali-rolling/main arm64 libstdc++6 arm64 15.2.0-7 [647 kB]
+Get:82 https://kali.download/kali kali-rolling/main arm64 libctf-nobfd0 arm64 2.45-8 [154 kB]
+Get:83 https://kali.download/kali kali-rolling/main arm64 libctf0 arm64 2.45-8 [85.7 kB]
+Get:84 https://kali.download/kali kali-rolling/main arm64 libsframe2 arm64 2.45-8 [79.7 kB]
+Get:85 https://kali.download/kali kali-rolling/main arm64 libgprofng0 arm64 2.45-8 [670 kB]
+Get:86 https://kali.download/kali kali-rolling/main arm64 libbinutils arm64 2.45-8 [677 kB]
+Get:87 https://kali.download/kali kali-rolling/main arm64 binutils-common arm64 2.45-8 [2,558 kB]
+Get:88 https://kali.download/kali kali-rolling/main arm64 binutils arm64 2.45-8 [263 kB]
+Get:89 https://kali.download/kali kali-rolling/main arm64 binutils-aarch64-linux-gnu arm64 2.45-8 [847 kB]
+Get:90 https://http.kali.org/kali kali-rolling/main arm64 libgmp-dev arm64 2:6.3.0+dfsg-5 [621 kB]
+Get:91 https://http.kali.org/kali kali-rolling/main arm64 libgmpxx4ldbl arm64 2:6.3.0+dfsg-5 [329 kB]
+Get:93 https://kali.download/kali kali-rolling/main arm64 libmpfr6 arm64 4.2.2-2 [685 kB]
+Get:94 https://kali.download/kali kali-rolling/main arm64 libmpc3 arm64 1.3.1-2 [50.2 kB]
+Get:95 https://kali.download/kali kali-rolling/main arm64 libgc1 arm64 1:8.2.10-1 [244 kB]
+Get:96 https://kali.download/kali kali-rolling/main arm64 libclang-cpp19 arm64 1:19.1.7-10.1 [12.0 MB]
+Get:92 https://http.kali.org/kali kali-rolling/main arm64 libgmp10 arm64 2:6.3.0+dfsg-5 [535 kB]
+Get:97 https://kali.download/kali kali-rolling/main arm64 clang-tools-19 arm64 1:19.1.7-10.1 [8,143 kB]
+Get:101 https://mirrors.esto.network/kali kali-rolling/main arm64 llvm-19 arm64 1:19.1.7-10.1 [14.7 MB]
+Get:98 https://kali.download/kali kali-rolling/main arm64 clang-19 arm64 1:19.1.7-10.1 [113 kB]
+Get:99 https://kali.download/kali kali-rolling/main arm64 libllvm19 arm64 1:19.1.7-10.1 [23.4 MB]
+Get:100 https://kali.download/kali kali-rolling/main arm64 llvm-19-dev arm64 1:19.1.7-10.1 [39.8 MB]
+Get:102 https://kali.download/kali kali-rolling/main arm64 llvm-19-runtime arm64 1:19.1.7-10.1 [502 kB]
+Get:103 https://kali.download/kali kali-rolling/main arm64 libgcc-15-dev arm64 15.2.0-7 [2,373 kB]
+Get:104 https://http.kali.org/kali kali-rolling/main arm64 libstdc++-15-dev arm64 15.2.0-7 [2,346 kB]
+Get:105 https://kali.download/kali kali-rolling/main arm64 libobjc-15-dev arm64 15.2.0-7 [166 kB]
+Get:106 https://kali.download/kali kali-rolling/main arm64 libclang-common-19-dev arm64 1:19.1.7-10.1 [741 kB]
+Get:108 https://http.kali.org/kali kali-rolling/main arm64 libxml2-dev arm64 2.14.6+dfsg-0.1 [732 kB]
+Get:109 https://http.kali.org/kali kali-rolling/main arm64 libxml2-16 arm64 2.14.6+dfsg-0.1 [601 kB]
+Get:111 https://kali.download/kali kali-rolling/main arm64 python3.13-venv arm64 3.13.9-1 [5,468 B]
+Get:112 https://kali.download/kali kali-rolling/main arm64 python3.13 arm64 3.13.9-1 [764 kB]
+Get:113 https://kali.download/kali kali-rolling/main arm64 python3-venv arm64 3.13.7-1 [1,180 B]
+Get:114 https://kali.download/kali kali-rolling/main arm64 libpython3-dev arm64 3.13.7-1 [10.5 kB]
+Get:115 https://kali.download/kali kali-rolling/main arm64 python3-dev arm64 3.13.7-1 [26.1 kB]
+Get:117 https://kali.download/kali kali-rolling/main arm64 python3-minimal arm64 3.13.7-1 [27.2 kB]
+Get:120 https://kali.download/kali kali-rolling/main arm64 libpython3.13 arm64 3.13.9-1 [2,055 kB]
+Get:121 https://kali.download/kali kali-rolling/main arm64 media-types all 14.0.0 [30.8 kB]
+Get:122 https://kali.download/kali kali-rolling/main arm64 python3.13-minimal arm64 3.13.9-1 [2,061 kB]
+Get:123 https://kali.download/kali kali-rolling/main arm64 libpython3.13-stdlib arm64 3.13.9-1 [1,900 kB]
+Get:124 https://kali.download/kali kali-rolling/main arm64 libpython3.13-minimal arm64 3.13.9-1 [858 kB]
+Get:125 https://http.kali.org/kali kali-rolling/main arm64 libdb5.3t64 arm64 5.3.28+dfsg2-10 [626 kB]
+Get:127 https://kali.download/kali kali-rolling/main arm64 libffi8 arm64 3.5.2-2 [21.5 kB]
+Get:128 https://kali.download/kali kali-rolling/main arm64 sqlite3 arm64 3.46.1-8 [378 kB]
+Get:130 https://kali.download/kali kali-rolling/main arm64 libpython3-stdlib arm64 3.13.7-1 [10.2 kB]
+Get:133 https://http.kali.org/kali kali-rolling/main arm64 python3-numpy-dev arm64 1:2.3.5+ds-2 [136 kB]
+Get:135 https://kali.download/kali kali-rolling/main arm64 liblapack3 arm64 3.12.1-7 [1,846 kB]
+Get:136 https://http.kali.org/kali kali-rolling/main arm64 python3-pandas-lib arm64 2.3.3+dfsg-2 [3,651 kB]
+Get:138 https://kali.download/kali kali-rolling/main arm64 llvm-19-linker-tools arm64 1:19.1.7-10.1 [1,107 kB]
+Get:139 https://kali.download/kali kali-rolling/main arm64 libnghttp3-9 arm64 1.12.0-1 [63.6 kB]
+Get:140 https://kali.download/kali kali-rolling/main arm64 libngtcp2-16 arm64 1.16.0-1 [123 kB]
+Get:141 https://kali.download/kali kali-rolling/main arm64 libngtcp2-crypto-ossl0 arm64 1.16.0-1 [25.7 kB]
+Get:142 https://kali.download/kali kali-rolling/main arm64 curl arm64 8.17.0-2 [273 kB]
+Get:144 https://kali.download/kali kali-rolling/main arm64 krb5-multidev arm64 1.22.1-2 [127 kB]
+Get:145 https://kali.download/kali kali-rolling/main arm64 libgssapi-krb5-2 arm64 1.22.1-2 [127 kB]
+Get:146 https://kali.download/kali kali-rolling/main arm64 libkrb5-3 arm64 1.22.1-2 [315 kB]
+Get:147 https://kali.download/kali kali-rolling/main arm64 libkdb5-10t64 arm64 1.22.1-2 [41.8 kB]
+Get:149 https://kali.download/kali kali-rolling/main arm64 libkadm5clnt-mit12 arm64 1.22.1-2 [40.7 kB]
+Get:150 https://kali.download/kali kali-rolling/main arm64 libkrb5support0 arm64 1.22.1-2 [32.2 kB]
+Get:151 https://kali.download/kali kali-rolling/main arm64 libk5crypto3 arm64 1.22.1-2 [77.1 kB]
+Get:152 https://kali.download/kali kali-rolling/main arm64 libgssrpc4t64 arm64 1.22.1-2 [56.5 kB]
+Get:153 https://kali.download/kali kali-rolling/main arm64 libcurl4t64 arm64 8.17.0-2 [369 kB]
+Get:154 https://kali.download/kali kali-rolling/main arm64 llvm-19-tools arm64 1:19.1.7-10.1 [481 kB]
+Get:155 https://kali.download/kali kali-rolling/main arm64 libgbm1 arm64 25.2.6-1 [45.2 kB]
+Get:156 https://kali.download/kali kali-rolling/main arm64 mesa-libgallium arm64 25.2.6-1 [10.3 MB]
+Get:157 https://kali.download/kali kali-rolling/main arm64 libnettle8t64 arm64 3.10.2-1 [305 kB]
+Get:158 https://kali.download/kali kali-rolling/main arm64 libpixman-1-0 arm64 0.46.4-1 [174 kB]
+Get:159 https://kali.download/kali kali-rolling/main arm64 liblz4-dev arm64 1.10.0-6 [93.8 kB]
+Get:161 https://http.kali.org/kali kali-rolling/main arm64 libapt-pkg7.0 arm64 3.1.12+kali1 [1,055 kB]
+Get:162 https://http.kali.org/kali kali-rolling/main arm64 apt arm64 3.1.12+kali1 [1,416 kB]
+Get:163 https://http.kali.org/kali kali-rolling/main arm64 apt-utils arm64 3.1.12+kali1 [338 kB]
+Get:164 https://kali.download/kali kali-rolling/main arm64 libdebconfclient0 arm64 0.281 [10.9 kB]
+Get:165 https://kali.download/kali kali-rolling/main arm64 base-passwd arm64 3.6.8 [54.0 kB]
+Get:166 https://kali.download/kali kali-rolling/main arm64 login.defs all 1:4.18.0-2 [211 kB]
+Get:168 https://kali.download/kali kali-rolling/main arm64 libsepol2 arm64 3.9-2 [263 kB]
+Get:169 https://kali.download/kali kali-rolling/main arm64 libsemanage2 arm64 3.9-1 [86.7 kB]
+Get:170 https://kali.download/kali kali-rolling/main arm64 passwd arm64 1:4.18.0-2 [1,261 kB]
+Get:171 https://kali.download/kali kali-rolling/main arm64 adduser all 3.153 [191 kB]
+Get:172 https://http.kali.org/kali kali-rolling/main arm64 login arm64 1:4.16.0-2+really2.41.2-4 [107 kB]
+Get:173 https://kali.download/kali kali-rolling/main arm64 cron arm64 3.0pl1-200 [85.0 kB]
+Get:174 https://kali.download/kali kali-rolling/main arm64 net-tools arm64 2.10-2 [191 kB]
+Get:175 https://kali.download/kali kali-rolling/main arm64 iodine arm64 0.7.0-12 [82.6 kB]
+Get:176 https://http.kali.org/kali kali-rolling/main arm64 fonts-freefont-ttf all 20211204+svn4273-4 [5,318 kB]
+Get:177 https://kali.download/kali kali-rolling/main arm64 fonts-texgyre-math all 20180621-7 [2,096 kB]
+Get:178 https://kali.download/kali kali-rolling/main arm64 fonts-texgyre all 20180621-7 [8,210 kB]
+Get:179 https://kali.download/kali kali-rolling/main arm64 fontconfig-config arm64 2.15.0-2.4 [318 kB]
+Get:182 https://http.kali.org/kali kali-rolling/main arm64 libheif-plugin-aomenc arm64 1.20.2-2+b1 [23.7 kB]
+Get:183 https://kali.download/kali kali-rolling/main arm64 libx265-215 arm64 4.1-3 [1,632 kB]
+Get:186 https://http.kali.org/kali kali-rolling/main arm64 libheif1 arm64 1.20.2-2+b1 [504 kB]
+Get:187 https://http.kali.org/kali kali-rolling/main arm64 libheif-plugin-libde265 arm64 1.20.2-2+b1 [16.9 kB]
+Get:188 https://kali.download/kali kali-rolling/main arm64 libdav1d7 arm64 1.5.2-1 [247 kB]
+Get:189 https://kali.download/kali kali-rolling/main arm64 liblcms2-2 arm64 2.17-1 [152 kB]
+Get:190 https://kali.download/kali kali-rolling/main arm64 libltdl7 arm64 2.5.4-7 [415 kB]
+Get:191 https://kali.download/kali kali-rolling/main arm64 libtiff6 arm64 4.7.1-1 [334 kB]
+Get:192 https://http.kali.org/kali kali-rolling/main arm64 imagemagick-7-common all 8:7.1.2.8+dfsg1-1 [69.3 kB]
+Get:194 https://http.kali.org/kali kali-rolling/main arm64 libmagickwand-7.q16-10 arm64 8:7.1.2.8+dfsg1-1 [269 kB]
+Get:196 https://kali.download/kali kali-rolling/main arm64 avahi-utils arm64 0.8-17 [47.4 kB]
+Get:197 https://kali.download/kali kali-rolling/main arm64 avahi-daemon arm64 0.8-17 [83.3 kB]
+Get:198 https://kali.download/kali kali-rolling/main arm64 libavahi-core7 arm64 0.8-17 [105 kB]
+Get:199 https://kali.download/kali kali-rolling/main arm64 libavahi-client3 arm64 0.8-17 [48.5 kB]
+Get:200 https://kali.download/kali kali-rolling/main arm64 libavahi-common3 arm64 0.8-17 [44.9 kB]
+Get:201 https://kali.download/kali kali-rolling/main arm64 libavahi-common-data arm64 0.8-17 [113 kB]
+Get:202 https://kali.download/kali kali-rolling/main arm64 libunbound8 arm64 1.24.1-2 [560 kB]
+Get:203 https://kali.download/kali kali-rolling/main arm64 libgnutls-dane0t64 arm64 3.8.10-3 [456 kB]
+Get:205 https://kali.download/kali kali-rolling/main arm64 p11-kit-modules arm64 0.25.9-2 [260 kB]
+Get:206 https://kali.download/kali kali-rolling/main arm64 libp11-kit0 arm64 0.25.9-2 [420 kB]
+Get:208 https://kali.download/kali kali-rolling/main arm64 libngtcp2-crypto-gnutls8 arm64 1.16.0-1 [23.8 kB]
+Get:209 https://kali.download/kali kali-rolling/main arm64 libcurl3t64-gnutls arm64 8.17.0-2 [363 kB]
+Get:210 https://kali.download/kali kali-rolling/main arm64 libgphoto2-port12t64 arm64 2.5.33-1 [139 kB]
+Get:212 https://kali.download/kali kali-rolling/main arm64 libgpg-error-l10n all 1.56-2 [119 kB]
+Get:213 https://kali.download/kali kali-rolling/main arm64 libgpg-error0 arm64 1.56-2 [84.0 kB]
+Get:215 https://kali.download/kali kali-rolling/main arm64 gpg-wks-client arm64 2.4.8-4 [101 kB]
+Get:216 https://kali.download/kali kali-rolling/main arm64 dirmngr arm64 2.4.8-4 [356 kB]
+Get:217 https://kali.download/kali kali-rolling/main arm64 gnupg-utils arm64 2.4.8-4 [180 kB]
+Get:218 https://kali.download/kali kali-rolling/main arm64 gpg-agent arm64 2.4.8-4 [249 kB]
+Get:219 https://kali.download/kali kali-rolling/main arm64 gpg arm64 2.4.8-4 [573 kB]
+Get:220 https://kali.download/kali kali-rolling/main arm64 gpgconf arm64 2.4.8-4 [121 kB]
+Get:221 https://kali.download/kali kali-rolling/main arm64 gnupg all 2.4.8-4 [418 kB]
+Get:222 https://kali.download/kali kali-rolling/main arm64 gpgsm arm64 2.4.8-4 [249 kB]
+Get:223 https://kali.download/kali kali-rolling/main arm64 gnupg-l10n all 2.4.8-4 [751 kB]
+Get:224 https://kali.download/kali kali-rolling/main arm64 libgpgme45 arm64 2.0.1-2 [331 kB]
+Get:225 https://kali.download/kali kali-rolling/main arm64 libgpgmepp7 arm64 2.0.0-2 [149 kB]
+Get:226 https://kali.download/kali kali-rolling/main arm64 libnspr4 arm64 2:4.38.2-1 [102 kB]
+Get:227 https://kali.download/kali kali-rolling/main arm64 libnss3 arm64 2:3.117-1 [1,288 kB]
+Get:228 https://http.kali.org/kali kali-rolling/main arm64 libpoppler-glib8t64 arm64 25.03.0-11.1+b1 [141 kB]
+Get:229 https://http.kali.org/kali kali-rolling/main arm64 libpoppler147 arm64 25.03.0-11.1+b1 [1,909 kB]
+Get:230 https://kali.download/kali kali-rolling/main arm64 libgstreamer1.0-0 arm64 1.26.8-1 [1,286 kB]
+Get:231 https://kali.download/kali kali-rolling/main arm64 iso-codes all 4.19.0-1 [3,327 kB]
+Get:232 https://kali.download/kali kali-rolling/main arm64 libgstreamer-plugins-base1.0-0 arm64 1.26.8-1 [899 kB]
+Get:234 https://kali.download/kali kali-rolling/main arm64 libgstreamer-gl1.0-0 arm64 1.26.8-1 [255 kB]
+Get:235 https://kali.download/kali kali-rolling/main arm64 gstreamer1.0-gl arm64 1.26.8-1 [172 kB]
+Get:236 https://kali.download/kali kali-rolling/main arm64 libogg0 arm64 1.3.6-2 [23.7 kB]
+Get:237 https://http.kali.org/kali kali-rolling/main arm64 libtheora1 arm64 1.2.0+dfsg-6 [130 kB]
+Get:239 https://http.kali.org/kali kali-rolling/main arm64 libtheoraenc2 arm64 1.2.0+dfsg-6 [105 kB]
+Get:240 https://kali.download/kali kali-rolling/main arm64 gstreamer1.0-plugins-good arm64 1.26.8-1 [2,042 kB]
+Get:241 https://kali.download/kali kali-rolling/main arm64 gstreamer1.0-plugins-bad arm64 1.26.8-1 [2,842 kB]
+Get:242 https://kali.download/kali kali-rolling/main arm64 gstreamer1.0-plugins-base arm64 1.26.8-1 [682 kB]
+Get:243 https://kali.download/kali kali-rolling/main arm64 libxkbcommon-x11-0 arm64 1.12.3-1 [15.8 kB]
+Get:244 https://kali.download/kali kali-rolling/main arm64 libxkbcommon0 arm64 1.12.3-1 [135 kB]
+Get:245 https://kali.download/kali kali-rolling/main arm64 libgstreamer-plugins-bad1.0-0 arm64 1.26.8-1 [945 kB]
+Get:246 https://kali.download/kali kali-rolling/main arm64 libchromaprint1 arm64 1.6.0-2 [39.0 kB]
+Get:247 https://kali.download/kali kali-rolling/main arm64 libdc1394-25 arm64 2.2.6-6 [106 kB]
+Get:248 https://kali.download/kali kali-rolling/main arm64 libasound2t64 arm64 1.2.14-2 [364 kB]
+Get:249 https://kali.download/kali kali-rolling/main arm64 libasound2-data all 1.2.14-2 [21.1 kB]
+Get:250 https://kali.download/kali kali-rolling/main arm64 pipewire-pulse arm64 1.4.9-1 [25.0 kB]
+Get:251 https://kali.download/kali kali-rolling/main arm64 pipewire-bin arm64 1.4.9-1 [557 kB]
+Get:252 https://kali.download/kali kali-rolling/main arm64 libpipewire-0.3-0t64 arm64 1.4.9-1 [261 kB]
+Get:253 https://kali.download/kali kali-rolling/main arm64 libspa-0.2-bluetooth arm64 1.4.9-1 [367 kB]
+Get:254 https://kali.download/kali kali-rolling/main arm64 libspa-0.2-modules arm64 1.4.9-1 [907 kB]
+Get:255 https://kali.download/kali kali-rolling/main arm64 pipewire arm64 1.4.9-1 [120 kB]
+Get:256 https://kali.download/kali kali-rolling/main arm64 libpipewire-0.3-modules arm64 1.4.9-1 [732 kB]
+Get:257 https://kali.download/kali kali-rolling/main arm64 libbluetooth3 arm64 5.84-1 [102 kB]
+Get:259 https://http.kali.org/kali kali-rolling/main arm64 libflac14 arm64 1.5.0+ds-5 [153 kB]
+Get:261 https://kali.download/kali kali-rolling/main arm64 libsndfile1 arm64 1.2.2-3 [198 kB]
+Get:262 https://kali.download/kali kali-rolling/main arm64 dconf-gsettings-backend arm64 0.49.0-2 [28.2 kB]
+Get:263 https://kali.download/kali kali-rolling/main arm64 dconf-service arm64 0.49.0-2 [31.8 kB]
+Get:264 https://kali.download/kali kali-rolling/main arm64 libdconf1 arm64 0.49.0-2 [41.7 kB]
+Get:265 https://kali.download/kali kali-rolling/main arm64 libdecor-0-0 arm64 0.2.4-1 [15.6 kB]
+Get:266 https://http.kali.org/kali kali-rolling/main arm64 libsdl3-0 arm64 3.2.26+ds-2 [830 kB]
+Get:267 https://http.kali.org/kali kali-rolling/main arm64 libfluidsynth3 arm64 2.5.1+dfsg-1 [256 kB]
+Get:269 https://kali.download/kali kali-rolling/main arm64 libgsm1 arm64 1.0.23-2 [26.7 kB]
+Get:271 https://kali.download/kali kali-rolling/main arm64 gir1.2-atk-1.0 arm64 2.58.1-1 [26.4 kB]
+Get:274 https://kali.download/kali kali-rolling/main arm64 libatk1.0-0t64 arm64 2.58.1-1 [50.1 kB]
+Get:275 https://kali.download/kali kali-rolling/main arm64 gir1.2-freedesktop arm64 1.86.0-6 [61.4 kB]
+Get:278 https://kali.download/kali kali-rolling/main arm64 at-spi2-core arm64 2.58.1-1 [60.6 kB]
+Get:279 https://kali.download/kali kali-rolling/main arm64 libatspi2.0-0t64 arm64 2.58.1-1 [76.7 kB]
+Get:280 https://kali.download/kali kali-rolling/main arm64 libcloudproviders0 arm64 0.3.6-3 [30.0 kB]
+Get:282 https://kali.download/kali kali-rolling/main arm64 libcups2t64 arm64 2.4.14-1 [234 kB]
+Get:283 https://kali.download/kali kali-rolling/main arm64 libfribidi0 arm64 1.0.16-3 [26.5 kB]
+Get:284 https://http.kali.org/kali kali-rolling/main arm64 libgdk-pixbuf2.0-common all 2.44.4+dfsg-1 [313 kB]
+Get:285 https://http.kali.org/kali kali-rolling/main arm64 libgdk-pixbuf-2.0-0 arm64 2.44.4+dfsg-1 [133 kB]
+Get:286 https://kali.download/kali kali-rolling/main arm64 libgraphite2-3 arm64 1.3.14-11 [70.8 kB]
+Get:288 https://kali.download/kali kali-rolling/main arm64 libharfbuzz-gobject0 arm64 12.1.0-1 [31.1 kB]
+Get:289 https://kali.download/kali kali-rolling/main arm64 gir1.2-harfbuzz-0.0 arm64 12.1.0-1 [41.7 kB]
+Get:290 https://kali.download/kali kali-rolling/main arm64 gir1.2-pango-1.0 arm64 1.56.3-2 [39.1 kB]
+Get:291 https://kali.download/kali kali-rolling/main arm64 libpangoxft-1.0-0 arm64 1.56.3-2 [28.1 kB]
+Get:293 https://kali.download/kali kali-rolling/main arm64 libpangoft2-1.0-0 arm64 1.56.3-2 [56.5 kB]
+Get:294 https://kali.download/kali kali-rolling/main arm64 fontconfig arm64 2.15.0-2.4 [463 kB]
+Get:295 https://kali.download/kali kali-rolling/main arm64 libpango-1.0-0 arm64 1.56.3-2 [222 kB]
+Get:296 https://http.kali.org/kali kali-rolling/main arm64 libgtk-3-common all 3.24.51-1 [4,922 kB]
+Get:297 https://http.kali.org/kali kali-rolling/main arm64 libgtk-3-0t64 arm64 3.24.51-1 [2,698 kB]
+Get:299 https://http.kali.org/kali kali-rolling/main arm64 libjson-glib-1.0-0 arm64 1.10.8+ds-2 [59.4 kB]
+Get:301 https://kali.download/kali kali-rolling/main arm64 libprotobuf32t64 arm64 3.21.12-14 [853 kB]
+Get:302 https://http.kali.org/kali kali-rolling/main arm64 libre2-11 arm64 20250805-1+b1 [161 kB]
+Get:303 https://http.kali.org/kali kali-rolling/main arm64 libdnnl3.6 arm64 3.9.1+ds-2 [3,733 kB]
+Get:304 https://http.kali.org/kali kali-rolling/main arm64 libonnxruntime1.21 arm64 1.21.0+dfsg-2 [3,258 kB]
+Get:305 https://http.kali.org/kali kali-rolling/main arm64 libonnxruntime-providers arm64 1.21.0+dfsg-2 [229 kB]
+Get:306 https://kali.download/kali kali-rolling/main arm64 libopenmpt0t64 arm64 0.8.3-1 [806 kB]
+Get:307 https://http.kali.org/kali kali-rolling/main arm64 librsvg2-common arm64 2.61.3+dfsg-2 [134 kB]
+Get:310 https://kali.download/kali kali-rolling/main arm64 libcaca0 arm64 0.99.beta20-6 [192 kB]
+Get:311 https://kali.download/kali kali-rolling/main arm64 libtag2 arm64 2.1.1-2 [309 kB]
+Get:312 https://kali.download/kali kali-rolling/main arm64 libsoup-3.0-common all 3.6.5-5 [65.8 kB]
+Get:314 https://kali.download/kali kali-rolling/main arm64 libv4l-0t64 arm64 1.32.0-2 [209 kB]
+Get:315 https://kali.download/kali kali-rolling/main arm64 libv4lconvert0t64 arm64 1.32.0-2 [146 kB]
+Get:317 https://kali.download/kali kali-rolling/main arm64 libsane1 arm64 1.4.0-1 [2,457 kB]
+Get:318 https://kali.download/kali kali-rolling/main arm64 libsane-common all 1.4.0-1 [1,324 kB]
+Get:319 https://kali.download/kali kali-rolling/main arm64 sane-utils arm64 1.4.0-1 [210 kB]
+Get:320 https://kali.download/kali kali-rolling/main arm64 initramfs-tools-bin arm64 0.150 [16.5 kB]
+Get:321 https://kali.download/kali kali-rolling/main arm64 dracut-install arm64 109-1 [42.2 kB]
+Get:322 https://kali.download/kali kali-rolling/main arm64 initramfs-tools all 0.150 [17.7 kB]
+Get:324 https://http.kali.org/kali kali-rolling/main arm64 linux-image-6.16.8+kali-arm64 arm64 6.16.8-1kali1 [99.2 MB]
+Get:325 https://kali.download/kali kali-rolling/main arm64 python3-tornado arm64 6.5.2-3 [357 kB]
+Get:326 https://kali.download/kali kali-rolling/main arm64 python3-bcrypt arm64 4.3.0-2 [186 kB]
+Get:328 https://kali.download/kali kali-rolling/main arm64 python3-pydantic-core arm64 2.41.5-1 [1,374 kB]
+Get:329 https://kali.download/kali kali-rolling/main arm64 python3-typing-inspection all 0.4.2-1 [13.8 kB]
+Get:330 https://kali.download/kali kali-rolling/main arm64 sslyze all 6.2.0-0kali2 [468 kB]
